@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/ma
 
 ✅ 输出 IPv4 + IPv6 的 v2rayN 链接
 
-VPS低于128M内存使用Hy2，建议在v2rayN客户端开启限速至55mbps比较合适
+VPS低于128M内存使用Hy2，建议在客户端开启限速至55mbps比较合适
 
 # 一键卸载脚本
 
