@@ -59,7 +59,8 @@ openssl req -x509 -newkey rsa:2048 \
 -keyout $INSTALL_DIR/key.pem \
 -out $INSTALL_DIR/cert.pem \
 -days 3650 -nodes \
--subj "/CN=tuic"
+-subj "/CN=www.bing.com" \
+-addext "subjectAltName=DNS:www.bing.com"
 
 # ===== 写配置 =====
 cat > $INSTALL_DIR/config.json <<EOF
