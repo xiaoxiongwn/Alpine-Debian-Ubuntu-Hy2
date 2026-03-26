@@ -40,9 +40,9 @@ echo "最新版本: $VERSION"
 # ===== 下载 =====
 ARCH=$(uname -m)
 if [[ "$ARCH" == "x86_64" ]]; then
-    FILE="tuic-server-linux-amd64"
+    FILE="tuic-server-x86_64-linux"
 elif [[ "$ARCH" == "aarch64" ]]; then
-    FILE="tuic-server-linux-arm64"
+    FILE="tuic-server-aarch64-linux"
 else
     echo "❌ 不支持架构"
     exit 1
