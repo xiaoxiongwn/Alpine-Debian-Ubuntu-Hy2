@@ -137,10 +137,10 @@ EOF
     echo ""
     echo "====== TUIC 节点信息 ======"
     if [ -n "$IPV4" ]; then
-        echo "tuic://${UUID}:${PASS}@${IPV4}:${PORT}?congestion_control=bbr&allowInsecure=1&sni=www.bing.com#TUIC-${IPV4}"
+        echo "tuic://${UUID}:${PASS}@${IPV4}:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-${IPV4}"
     fi
     if $IPV6_SUPPORTED && [ -n "$IPV6" ]; then
-        echo "tuic://${UUID}:${PASS}@[${IPV6}]:${PORT}?congestion_control=bbr&allowInsecure=1&sni=www.bing.com#TUIC-${IPV6}"
+        echo "tuic://${UUID}:${PASS}@[${IPV6}]:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-${IPV6}"
     fi
 
     echo ""
