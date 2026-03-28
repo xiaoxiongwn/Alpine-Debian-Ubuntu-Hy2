@@ -3,7 +3,7 @@ set -e
 
 WORK_DIR="/usr/local/tuic"
 BIN="${WORK_DIR}/tuic-server"
-CONF="${WORK_DIR}/config.yaml"
+CONF="${WORK_DIR}/config.toml"
 SERVICE_NAME="tuic"
 
 function install_tuic() {
@@ -48,21 +48,45 @@ function install_tuic() {
     UUID=$(cat /proc/sys/kernel/random/uuid)
     PASS=$(openssl rand -hex 16)
 
-    # 生成 YAML 配置
+    # 生成 TOML 配置
     cat > $CONF <<EOF
-server: "0.0.0.0:${PORT}"
-users:
-  - uuid: "${UUID}"
-    password: "${PASS}"
-congestion_control: "bbr"
-auth_timeout: "3s"
-zero_rtt_handshake: false
-heartbeat: "10s"
-tls:
-  certificate: "cert.pem"
-  private_key: "key.pem"
-  alpn:
-    - "h3"
+log_level = "warn"
+server = "0.0.0.0:${TUIC_PORT}"
+
+udp_relay_ipv6 = false
+zero_rtt_handshake = true
+dual_stack = false
+auth_timeout = "8s"
+task_negotiation_timeout = "4s"
+gc_interval = "8s"
+gc_lifetime = "8s"
+max_external_packet_size = 8192
+
+[users]
+${TUIC_UUID} = "${TUIC_PASSWORD}"
+
+[tls]
+certificate = "$CERT_PEM"
+private_key = "$KEY_PEM"
+alpn = ["h3"]
+
+[restful]
+addr = "127.0.0.1:${TUIC_PORT}"
+secret = "$(openssl rand -hex 16)"
+maximum_clients_per_user = 999999999
+
+[quic]
+initial_mtu = $((1200 + RANDOM % 200))
+min_mtu = 1200
+gso = true
+pmtu = true
+send_window = 33554432
+receive_window = 16777216
+max_idle_time = "25s"
+
+[quic.congestion_control]
+controller = "bbr"
+initial_window = 6291456
 EOF
 
     # 自签证书
