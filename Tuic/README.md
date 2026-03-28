@@ -31,15 +31,15 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 ## ✨ 功能
 
 * 自动安装 TUIC
-* 自动生成证书（[www.bing.com）](http://www.bing.com）)
+* 自动生自签证书（[www.bing.com）](http://www.bing.com）)
 * 自动开机启动
 * 输出 v2rayN IPv4 / IPv6 链接
-* 支持 systemd / openrc
+* 支持 systemd / openrc 进程监视守护
 
 ---
 
 ## ⚠️ 注意
 
-* 默认端口随机
+* 默认端口随机，可自行更改，配置文件路径 /usr/local/tuic/config.yaml
 * 防火墙请放行 UDP 端口
-* 自签证书需 allowInsecure=true
+* 自签证书需允许不安全 allowInsecure=true
