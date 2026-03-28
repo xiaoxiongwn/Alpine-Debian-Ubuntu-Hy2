@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # ========= 基础变量 =========
 MASQ_DOMAIN="www.bing.com"
