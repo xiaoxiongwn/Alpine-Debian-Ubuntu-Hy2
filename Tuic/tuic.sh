@@ -8,7 +8,7 @@ SERVICE_NAME="tuic"
 
 # 安装函数
 install_tuic() {
-    echo "🚀 安装 TUIC v1.7+ ..."
+    echo "🚀 安装 TUIC ..."
 
     # 检测架构
     ARCH=$(uname -m)
