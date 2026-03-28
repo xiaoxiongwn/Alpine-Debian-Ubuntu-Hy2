@@ -3,11 +3,11 @@ set -e
 
 WORK_DIR="/usr/local/tuic"
 BIN="${WORK_DIR}/tuic-server"
-CONF="${WORK_DIR}/config.json"
+CONF="${WORK_DIR}/config.yaml"
 SERVICE_NAME="tuic"
 
 function install_tuic() {
-    echo "🚀 安装 TUIC ..."
+    echo "🚀 安装 TUIC (YAML版)..."
 
     # 架构
     ARCH=$(uname -m)
@@ -43,30 +43,24 @@ function install_tuic() {
     curl -L -o $BIN $URL || curl -L -o $BIN https://ghproxy.com/$URL
     chmod +x $BIN
 
-    # 生成配置
+    # 生成 YAML 配置
     PORT=$(shuf -i20000-60000 -n1)
     UUID=$(cat /proc/sys/kernel/random/uuid)
-    PASS=$(openssl rand -hex 8)
+    PASS=$(openssl rand -hex 16)
 
-    cat > $CONF <<EOF
-{
-  "server": "0.0.0.0:${PORT}",
-  "users": {
-    "${UUID}": "${PASS}"
-  },
-  "tls": {
-    "certificate": "cert.pem",
-    "private_key": "key.pem",
-    "alpn": ["h3"]
-  },
-  "quic": {
-    "default": {
-      "congestion_control": {
-        "bbr": {}
-      }
-    }
-  }
-}
+cat > $CONF <<EOF
+server: "0.0.0.0:${PORT}"
+users:
+  ${UUID}: "${PASS}"
+tls:
+  certificate: "cert.pem"
+  private_key: "key.pem"
+  alpn:
+    - "h3"
+quic:
+  default:
+    congestion_control:
+      bbr: {}
 EOF
 
     # 生成自签证书
@@ -103,7 +97,7 @@ EOF
       service ${SERVICE_NAME} start
     fi
 
-    # 检测
+    # 检测服务
     echo "🔍 检测服务状态..."
     sleep 2
     if pgrep -f tuic-server >/dev/null; then
