@@ -8,7 +8,7 @@ CONF="${WORK_DIR}/config.json"
 mkdir -p $WORK_DIR
 cd $WORK_DIR
 
-echo "🚀 安装 TUIC (JSON版)..."
+echo "🚀 安装 TUIC ..."
 
 # ========= 架构 =========
 ARCH=$(uname -m)
