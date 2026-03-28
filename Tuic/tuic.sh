@@ -41,7 +41,7 @@ install_tuic() {
 
     # 下载 TUIC 可执行文件
     URL="https://github.com/Itsusinn/tuic/releases/latest/download/tuic-server-${TUIC_ARCH}-linux"
-    curl -L -o $BIN $URL || curl -L -o $BIN https://ghproxy.com/$URL
+    curl -L -o $BIN $URL || curl -L -o $BIN https://ghfast.top/$URL
     chmod +x $BIN
 
     # 随机端口 / UUID / 密码
