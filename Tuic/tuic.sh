@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 # ========= 基础变量 =========
 MASQ_DOMAIN="www.bing.com"
