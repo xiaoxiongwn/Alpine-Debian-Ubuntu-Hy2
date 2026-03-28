@@ -40,7 +40,7 @@ install_tuic() {
     cd $WORK_DIR
 
     # 下载 TUIC 可执行文件
-    URL="https://github.com/Itsusinn/tuic/releases/download/v1.7.2/tuic-server-${TUIC_ARCH}-linux"
+    URL="https://github.com/Itsusinn/tuic/releases/latest/download/tuic-server-${TUIC_ARCH}-linux"
     curl -L -o $BIN $URL || curl -L -o $BIN https://ghproxy.com/$URL
     chmod +x $BIN
 
