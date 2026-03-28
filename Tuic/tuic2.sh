@@ -62,7 +62,7 @@ gen_cert() {
 gen_conf() {
   PORT=$(shuf -i20000-60000 -n1)
   UUID=$(cat /proc/sys/kernel/random/uuid)
-  PASS=$(openssl rand -hex 16)
+  PASS=$(openssl rand -hex 8)
 
 cat > $CONF <<EOF
 server = "[::]:${PORT}"
