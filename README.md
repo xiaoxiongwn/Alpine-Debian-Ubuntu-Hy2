@@ -1,4 +1,4 @@
-# VPS运行以下脚本(AI生成)：
+# 🚀 一键安装 （Ai生成）
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh | bash
@@ -25,9 +25,9 @@ curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/ma
 
 ✅ 输出 IPv4 + IPv6 的 v2rayN 链接
 
-VPS低于128M内存使用Hy2，建议在客户端开启限速至55mbps比较合适
+VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
 
-# 一键卸载脚本
+# 🗑 卸载
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh | bash
