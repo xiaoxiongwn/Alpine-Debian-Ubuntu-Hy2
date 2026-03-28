@@ -15,7 +15,7 @@
 ## 🚀 一键安装
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/tuic/main/tuic.sh) install
+bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Tuic/tuic.sh) install
 ```
 
 ---
@@ -23,7 +23,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/tuic/main/tu
 ## 🗑 卸载
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/tuic/main/tuic.sh) uninstall
+bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Tuic/tuic.sh) uninstall
 ```
 
 ---
