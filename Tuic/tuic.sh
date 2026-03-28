@@ -60,7 +60,11 @@ function install_tuic() {
     "alpn": ["h3"]
   },
   "quic": {
-    "congestion_control": "bbr"
+    "default": {
+      "congestion_control": {
+        "bbr": {}
+      }
+    }
   }
 }
 EOF
