@@ -7,7 +7,7 @@ CONF="${WORK_DIR}/config.json"
 SERVICE_NAME="tuic"
 
 function install_tuic() {
-    echo "🚀 安装 TUIC (通用 JSON版)..."
+    echo "🚀 安装 TUIC ..."
 
     # 架构
     ARCH=$(uname -m)
@@ -38,16 +38,15 @@ function install_tuic() {
     mkdir -p $WORK_DIR
     cd $WORK_DIR
 
-    # 下载 TUIC
+    # 下载 TUIC 直接到 BIN
     URL="https://github.com/Itsusinn/tuic/releases/download/v1.7.2/tuic-server-${TUIC_ARCH}-linux"
-    curl -L -o tuic-server $URL || curl -L -o tuic-server https://ghproxy.com/$URL
-    chmod +x tuic-server
-    mv tuic-server $BIN
+    curl -L -o $BIN $URL || curl -L -o $BIN https://ghproxy.com/$URL
+    chmod +x $BIN
 
     # 生成配置
     PORT=$(shuf -i20000-60000 -n1)
     UUID=$(cat /proc/sys/kernel/random/uuid)
-    PASS=$(openssl rand -hex 16)
+    PASS=$(openssl rand -hex 8)
 
     cat > $CONF <<EOF
 {
