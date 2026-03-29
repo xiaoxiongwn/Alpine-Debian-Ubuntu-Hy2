@@ -41,5 +41,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 ## ⚠️ 注意
 
 * 默认端口随机，可自行更改，配置文件路径 /usr/local/tuic/config.yaml
-* 防火墙请放行 UDP 端口
+* 更改端口后使用命令 service tuic restart 生效 
+* VPS防火墙请放行 UDP 端口
 * 自签证书需允许不安全 allowInsecure=true
