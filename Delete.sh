@@ -58,7 +58,7 @@ echo
 echo "=============================="
 echo "✅ Hysteria2 已完全卸载"
 echo "🖥 系统: $OS"
-echo "🧹 已清理内容："
+echo "🧹 已清理以下内容："
 echo "   - 服务（OpenRC / systemd）"
 echo "   - 配置与证书 (/etc/hysteria)"
 echo "   - 可执行文件 (/usr/local/bin/hysteria)"
