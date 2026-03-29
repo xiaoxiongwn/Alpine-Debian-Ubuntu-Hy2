@@ -74,7 +74,7 @@ openssl req -x509 -nodes -newkey rsa:2048 \
   -days 3650 \
   -subj "/CN=$SERVER_NAME"
 
-# 配置文件（无任何限速）
+# 配置文件
 echo "▶ 写入配置文件..."
 cat > "$CONF" <<EOF
 listen: :$PORT
@@ -143,7 +143,7 @@ EOF
 fi
 
 # 链接
-LINK_V4="hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#$TAG"
+LINK_V4="hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv4"
 [ -n "$IPV6" ] && LINK_V6="hy2://$PASSWORD@[$IPV6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv6"
 
 echo
