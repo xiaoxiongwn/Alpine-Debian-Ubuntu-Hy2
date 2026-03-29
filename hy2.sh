@@ -178,30 +178,37 @@ status_hy2() {
 
 # ====== 菜单 ======
 menu() {
-    echo
-    echo "====== Hysteria2 管理 ======"
-    echo "1. 安装"
-    echo "2. 卸载"
-    echo "3. 重装"
-    echo "4. 状态"
-    echo "0. 退出"
-    echo "==========================="
-    read -rp "请选择: " num
+    while true; do
+        echo
+        echo "====== Hysteria2 管理 ======"
+        echo "1. 安装"
+        echo "2. 卸载"
+        echo "3. 重装"
+        echo "4. 状态"
+        echo "0. 退出"
+        echo "==========================="
+        read -rp "请选择: " num
 
-    case "$num" in
-        1) install_hy2 ;;
-        2) uninstall_hy2 ;;
-        3) uninstall_hy2 && install_hy2 ;;
-        4) status_hy2 ;;
-        *) exit 0 ;;
-    esac
+        case "$num" in
+            1) install_hy2 ;;
+            2) uninstall_hy2 ;;
+            3) uninstall_hy2 && install_hy2 ;;
+            4) status_hy2 ;;
+            0) exit 0 ;;
+            *) red "❌ 无效选项" ;;
+        esac
+    done
 }
 
 # ====== 参数模式 ======
-case "$1" in
-    install) install_hy2 ;;
-    uninstall) uninstall_hy2 ;;
-    restart) uninstall_hy2 && install_hy2 ;;
-    status) status_hy2 ;;
-    *) menu ;;
-esac
+if [ -z "$1" ]; then
+    menu
+else
+    case "$1" in
+        install) install_hy2 ;;
+        uninstall) uninstall_hy2 ;;
+        restart) uninstall_hy2 && install_hy2 ;;
+        status) status_hy2 ;;
+        *) red "❌ 参数无效"; exit 1 ;;
+    esac
+fi
