@@ -5,6 +5,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 ```
 
+# 🗑 卸载
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh)
+
+```
+
 支持Alpine、Debian、Ubuntu系统，进程监视守护，开机自启动
 
 使用 www.bing.com 自签证书，跳过证书验证设置true
@@ -27,9 +34,4 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
 
-# 🗑 卸载
 
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh)
-
-```
