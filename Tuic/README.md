@@ -33,7 +33,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 * 自动安装 TUIC
 * 自动生自签证书（[www.bing.com）](http://www.bing.com）)
 * 自动开机启动
-* 输出 v2rayN IPv4 / IPv6 链接
+* 输出 v2rayN 的 IPv4 / IPv6 链接
 * 支持 systemd / openrc 进程监视守护
 
 ---
