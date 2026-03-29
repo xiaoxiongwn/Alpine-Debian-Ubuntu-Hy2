@@ -1,7 +1,7 @@
 # 🚀 一键安装 （Ai生成）
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
 
 ```
 
