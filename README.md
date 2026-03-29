@@ -30,6 +30,6 @@ VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
 # 🗑 卸载
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh)
 
 ```
