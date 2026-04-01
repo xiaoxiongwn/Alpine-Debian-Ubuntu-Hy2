@@ -113,9 +113,9 @@ udpIdleTimeout: 60s
 
 # DNS（防污染）
 resolver:
-  type: udp
-  udp:
-    addr: 1.1.1.1:53
+  type: tcp
+  tcp:
+    addr: 8.8.8.8:53
 EOF
 
 # ===== 服务管理 =====
