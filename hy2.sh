@@ -77,24 +77,29 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 # 配置文件
 echo "▶ 写入配置文件..."
 cat > "$CONF" <<EOF
+# 监听端口
 listen: :$PORT
 
+# 自签证书
 tls:
   cert: $WORKDIR/cert.pem
   key: $WORKDIR/key.pem
   alpn:
     - h3
 
+# 密码
 auth:
   type: password
   password: "$PASSWORD"
 
+# 伪装（防探测）
 masquerade:
   type: proxy
   proxy:
     url: https://$SERVER_NAME
     rewriteHost: true
 
+# QUIC 优化
 quic:
   initStreamReceiveWindow: 8388608
   maxStreamReceiveWindow: 8388608
@@ -103,8 +108,10 @@ quic:
   maxIdleTimeout: 60s
   maxIncomingStreams: 1024
 
+# UDP转发
 udpIdleTimeout: 60s
 
+# DNS（防污染）
 resolver:
   type: udp
   udp:
