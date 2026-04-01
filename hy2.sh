@@ -103,6 +103,8 @@ quic:
   maxIdleTimeout: 60s
   maxIncomingStreams: 1024
 
+udpIdleTimeout: 60s
+
 resolver:
   type: udp
   udp:
