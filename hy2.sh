@@ -94,6 +94,19 @@ masquerade:
   proxy:
     url: https://$SERVER_NAME
     rewriteHost: true
+
+quic:
+  initStreamReceiveWindow: 8388608
+  maxStreamReceiveWindow: 8388608
+  initConnReceiveWindow: 20971520
+  maxConnReceiveWindow: 20971520
+  maxIdleTimeout: 60s
+  maxIncomingStreams: 1024
+
+resolver:
+  type: udp
+  udp:
+    addr: 1.1.1.1:53
 EOF
 
 # ===== 服务管理 =====
