@@ -108,7 +108,7 @@ udpIdleTimeout: 60s
 resolver:
   type: tcp
   tcp:
-    addr: 8.8.8.8:53
+    addr: 208.67.222.222:53
 EOF
 
 # ===== 服务管理 =====
