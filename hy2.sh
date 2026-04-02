@@ -92,13 +92,6 @@ auth:
   type: password
   password: "$PASSWORD"
 
-# 伪装（防探测）
-masquerade:
-  type: proxy
-  proxy:
-    url: https://$SERVER_NAME
-    rewriteHost: true
-
 # QUIC 优化
 quic:
   initStreamReceiveWindow: 8388608
