@@ -115,7 +115,7 @@ EOF
     echo "密码: $PASS"
     echo ""
     echo "分享链接："
-    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3&insecure=1&allowInsecure=1$#Xray-HY2"
+    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3&insecure=1&allowInsecure=1#Xray-HY2"
     echo ""
 }
 
