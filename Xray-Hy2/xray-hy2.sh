@@ -63,8 +63,8 @@ FINGERPRINT=$(openssl x509 -in $WORKDIR/cert.crt -noout -fingerprint -sha256 \
           "alpn": ["h3"],
           "certificates": [
             {
-              "certificateFile": "cert.crt",
-              "keyFile": "private.key"
+              "certificateFile": "/usr/local/etc/xray/cert.crt",
+              "keyFile": "/usr/local/etc/xray/private.key"
             }
           ]
         },
