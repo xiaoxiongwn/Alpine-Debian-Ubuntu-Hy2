@@ -42,8 +42,8 @@ FINGERPRINT=$(openssl x509 -in $WORKDIR/cert.crt -noout -fingerprint -sha256 \
   "log": { "loglevel": "debug" },
   "inbounds": [
     {
-      "listen": "127.0.0.1",
-      "port": 1081,
+      "listen": ""::"",
+      "port": $Port,
       "protocol": "hysteria",
       "settings": {
         "version": 2,
@@ -67,14 +67,6 @@ FINGERPRINT=$(openssl x509 -in $WORKDIR/cert.crt -noout -fingerprint -sha256 \
               "keyFile": "/usr/local/etc/xray/private.key"
             }
           ]
-        },
-        "finalmask": {
-          "udp": [
-            {
-              "type": "salamander",
-              "settings": {
-                "password": "12345678"
-              }
             }
           ]
         }
@@ -123,7 +115,7 @@ EOF
     echo "密码: $PASS"
     echo ""
     echo "分享链接："
-    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3&insecure=1&allowInsecure=1$pinSHA256=$FINGERPRINT#Xray-HY2"
+    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3&insecure=1&allowInsecure=1$#Xray-HY2"
     echo ""
 }
 
