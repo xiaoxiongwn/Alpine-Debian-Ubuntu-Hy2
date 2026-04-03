@@ -31,6 +31,10 @@ install_xray() {
     -keyout $WORKDIR/private.key \
     -out $WORKDIR/cert.crt \
     -subj "/CN=www.bing.com"
+    
+    green ">>> 生成证书指纹"
+FINGERPRINT=$(openssl x509 -in $WORKDIR/cert.crt -noout -fingerprint -sha256 \
+| cut -d "=" -f2 | tr -d ':' | tr 'A-Z' 'a-z')
 
     green ">>> 写入配置"
     cat > $WORKDIR/config.json <<EOF
@@ -52,6 +56,7 @@ install_xray() {
       "tls": {
         "enabled": true,
         "alpn": ["h3"],
+        "pinnedPeerCertSha256": "$FINGERPRINT"
         "certificate_path": "$WORKDIR/cert.crt",
         "key_path": "$WORKDIR/private.key"
       }
