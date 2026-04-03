@@ -19,7 +19,7 @@ apt install -y curl wget unzip openssl
 
 # 下载 Xray 26.3.27
 echo ">>> 下载 Xray..."
-wget -O xray.zip https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-linux-64.zip
+wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
 
 unzip -o xray.zip
 install -m 755 xray $XRAY_BIN
