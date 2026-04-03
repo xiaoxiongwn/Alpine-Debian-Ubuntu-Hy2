@@ -1,42 +1,39 @@
 #!/usr/bin/env bash
 set -e
 
-### ===== 基本参数 =====
-PORT=$(( ( RANDOM % 40000 ) + 20000 ))
-UUID=$(cat /proc/sys/kernel/random/uuid)
-PASS=$(openssl rand -base64 12)
 WORKDIR="/usr/local/etc/xray"
 XRAY_BIN="/usr/local/bin/xray"
 SERVICE="/etc/systemd/system/xray.service"
 
-echo "=============================="
-echo " Xray HY2 一键安装开始"
-echo "=============================="
+green() { echo -e "\033[32m$1\033[0m"; }
+red() { echo -e "\033[31m$1\033[0m"; }
+yellow() { echo -e "\033[33m$1\033[0m"; }
 
-# 安装依赖
-apt update -y
-apt install -y curl wget unzip openssl
+install_xray() {
+    green ">>> 开始安装 Xray + HY2"
 
-# 下载 Xray 26.3.27
-echo ">>> 下载 Xray..."
-wget -O xray.zip https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-linux-64.zip
+    PORT=$(( ( RANDOM % 40000 ) + 20000 ))
+    PASS=$(openssl rand -base64 12)
 
-unzip -o xray.zip
-install -m 755 xray $XRAY_BIN
+    apt update -y
+    apt install -y curl wget unzip openssl
 
-mkdir -p $WORKDIR
+    cd /tmp
+    wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+    unzip -o xray.zip
+    install -m 755 xray $XRAY_BIN
 
-# 生成证书
-echo ">>> 生成自签证书..."
-openssl req -x509 -nodes -days 3650 \
--newkey rsa:2048 \
--keyout $WORKDIR/private.key \
--out $WORKDIR/cert.crt \
--subj "/CN=www.bing.com"
+    mkdir -p $WORKDIR
 
-# 写入配置
-echo ">>> 写入配置..."
-cat > $WORKDIR/config.json <<EOF
+    green ">>> 生成证书"
+    openssl req -x509 -nodes -days 3650 \
+    -newkey rsa:2048 \
+    -keyout $WORKDIR/private.key \
+    -out $WORKDIR/cert.crt \
+    -subj "/CN=www.bing.com"
+
+    green ">>> 写入配置"
+    cat > $WORKDIR/config.json <<EOF
 {
   "log": {
     "loglevel": "warning"
@@ -68,9 +65,8 @@ cat > $WORKDIR/config.json <<EOF
 }
 EOF
 
-# systemd 服务
-echo ">>> 创建服务..."
-cat > $SERVICE <<EOF
+    green ">>> 创建 systemd 服务"
+    cat > $SERVICE <<EOF
 [Unit]
 Description=Xray Service
 After=network.target
@@ -85,23 +81,59 @@ LimitNOFILE=51200
 WantedBy=multi-user.target
 EOF
 
-# 启动
-systemctl daemon-reexec
-systemctl daemon-reload
-systemctl enable xray
-systemctl restart xray
+    systemctl daemon-reexec
+    systemctl daemon-reload
+    systemctl enable xray
+    systemctl restart xray
 
-# 防火墙
-ufw allow $PORT/udp || true
-iptables -I INPUT -p udp --dport $PORT -j ACCEPT || true
+    ufw allow $PORT/udp 2>/dev/null || true
+    iptables -I INPUT -p udp --dport $PORT -j ACCEPT 2>/dev/null || true
 
-echo "=============================="
-echo "    ✅ 安装完成"
-echo "=============================="
-echo ""
-echo "端口: $PORT"
-echo "密码: $PASS"
-echo ""
-echo "分享链接："
-echo "hy2://$PASS@$(curl -s ip.sb):$PORT?sni=www.bing.com&alpn=h3#Xray-HY2"
-echo ""
+    IP=$(curl -s ip.sb)
+
+    green "=============================="
+    green "      ✅ 安装完成"
+    green "=============================="
+    echo ""
+    echo "端口: $PORT"
+    echo "密码: $PASS"
+    echo ""
+    echo "分享链接："
+    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3#Xray-HY2"
+    echo ""
+}
+
+uninstall_xray() {
+    yellow ">>> 开始卸载"
+
+    systemctl stop xray 2>/dev/null || true
+    systemctl disable xray 2>/dev/null || true
+
+    rm -f $SERVICE
+    rm -rf $WORKDIR
+    rm -f $XRAY_BIN
+
+    systemctl daemon-reload
+
+    red "✅ 已彻底卸载 Xray + HY2"
+}
+
+menu() {
+    echo "=============================="
+    echo " Xray HY2 管理脚本"
+    echo "=============================="
+    echo "1. 安装 Xray + HY2"
+    echo "2. 卸载"
+    echo "0. 退出"
+    echo "=============================="
+    read -p "请选择: " num
+
+    case "$num" in
+        1) install_xray ;;
+        2) uninstall_xray ;;
+        0) exit 0 ;;
+        *) red "无效输入" ;;
+    esac
+}
+
+menu
