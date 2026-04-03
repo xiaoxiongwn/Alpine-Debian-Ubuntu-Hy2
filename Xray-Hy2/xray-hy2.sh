@@ -13,7 +13,7 @@ install_xray() {
     green ">>> 开始安装 Xray + HY2"
 
     PORT=$(( ( RANDOM % 40000 ) + 20000 ))
-    PASS=$(openssl rand -base64 12)
+    PASS=$(openssl rand -hex 8)
 
     apt update -y
     apt install -y curl wget unzip openssl
@@ -39,32 +39,51 @@ FINGERPRINT=$(openssl x509 -in $WORKDIR/cert.crt -noout -fingerprint -sha256 \
     green ">>> 写入配置"
     cat > $WORKDIR/config.json <<EOF
 {
-  "log": {
-    "loglevel": "warning"
-  },
+  "log": { "loglevel": "debug" },
   "inbounds": [
     {
-      "type": "hysteria2",
-      "tag": "hy2-in",
-      "listen": "::",
-      "listen_port": $PORT,
-      "users": [
-        {
-          "password": "$PASS"
+      "listen": "127.0.0.1",
+      "port": 1081,
+      "protocol": "hysteria",
+      "settings": {
+        "version": 2,
+        "clients": [
+          {
+            "auth": "5783a3e7-e373-51cd-8642-c83782b807c5"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "hysteria",
+        "hysteriaSettings": {
+          "version": 2
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "alpn": ["h3"],
+          "certificates": [
+            {
+              "certificateFile": "cert.crt",
+              "keyFile": "private.key"
+            }
+          ]
+        },
+        "finalmask": {
+          "udp": [
+            {
+              "type": "salamander",
+              "settings": {
+                "password": "12345678"
+              }
+            }
+          ]
         }
-      ],
-      "tls": {
-        "enabled": true,
-        "alpn": ["h3"],
-        "pinnedPeerCertSha256": "$FINGERPRINT"
-        "certificate_path": "$WORKDIR/cert.crt",
-        "key_path": "$WORKDIR/private.key"
       }
     }
   ],
   "outbounds": [
     {
-      "type": "freedom"
+      "protocol": "freedom"
     }
   ]
 }
@@ -104,7 +123,7 @@ EOF
     echo "密码: $PASS"
     echo ""
     echo "分享链接："
-    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3#Xray-HY2"
+    echo "hy2://$PASS@$IP:$PORT?sni=www.bing.com&alpn=h3&insecure=1&allowInsecure=1$pinSHA256=$FINGERPRINT#Xray-HY2"
     echo ""
 }
 
