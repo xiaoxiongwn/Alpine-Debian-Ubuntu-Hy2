@@ -17,7 +17,7 @@ echo "=============================="
 apt update -y
 apt install -y curl wget unzip openssl
 
-# 下载 Xray 26.3.27
+# 下载 Xray 最新版本
 echo ">>> 下载 Xray..."
 wget -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
 
