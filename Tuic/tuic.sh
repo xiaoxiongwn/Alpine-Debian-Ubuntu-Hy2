@@ -107,7 +107,6 @@ EOF
 command="${BIN}"
 command_args="-c ${CONF}"
 command_background=true
-pidfile="/run/tuic.pid"
 EOF
 
         chmod +x /etc/init.d/${SERVICE_NAME}
