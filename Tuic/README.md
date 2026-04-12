@@ -1,4 +1,4 @@
-# TUIC 一键脚本（Ai生成）
+# TUIC 一键脚本（ChatGPT生成）
 
 支持系统：
 
