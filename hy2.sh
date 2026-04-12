@@ -169,6 +169,10 @@ fi
 LINK_V4="hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv4"
 [ -n "$IPV6" ] && LINK_V6="hy2://$PASSWORD@[$IPV6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv6"
 
+# 定义颜色变量
+GREEN='\e[32m'
+NC='\e[0m'
+
 echo
 echo "=============================="
 echo "✅ Hysteria2 安装完成"
@@ -178,6 +182,7 @@ echo "📌 IPv4: $IP"
 echo "🎲 端口: $PORT"
 echo "🔐 密码: $PASSWORD"
 echo "📎 hy2 链接："
-echo "$LINK_V4"
-[ -n "$IPV6" ] && echo "$LINK_V6"
+# 使用 -e 参数激活转义字符
+echo -e "${GREEN}${LINK_V4}${NC}"
+[ -n "$IPV6" ] && echo -e "${GREEN}${LINK_V6}${NC}"
 echo "=============================="
