@@ -47,7 +47,7 @@ install_tuic() {
     # 随机端口 / UUID / 密码
     PORT=$(shuf -i20000-60000 -n1)
     UUID=$(cat /proc/sys/kernel/random/uuid)
-    PASS=$(openssl rand -hex 8)
+    PASS=$(openssl rand -hex 4)
 
     # 检测 IPv6 支持
     if ip -6 addr >/dev/null 2>&1; then
