@@ -122,17 +122,26 @@ EOF
         service ${SERVICE_NAME} restart
     fi
 
+ # 定义颜色变量
+    GREEN='\033[32m'
+    NC='\033[0m' # No Color (重置颜色)
+
     # 输出节点信息
     IPV4=$(curl -s4 ip.sb || true)
     IPV6=$(curl -s6 ip.sb || true)
 
     echo ""
     echo "====== TUIC 节点信息 ======"
+    
     if [ -n "$IPV4" ]; then
-        echo "tuic://${UUID}:${PASS}@${IPV4}:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV4"
+        echo -e "IPv4 链接:"
+        echo -e "${GREEN}tuic://${UUID}:${PASS}@${IPV4}:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV4${NC}"
     fi
+
     if $IPV6_SUPPORTED && [ -n "$IPV6" ]; then
-        echo "tuic://${UUID}:${PASS}@[${IPV6}]:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV6"
+        echo ""
+        echo -e "IPv6 链接:"
+        echo -e "${GREEN}tuic://${UUID}:${PASS}@[${IPV6}]:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV6${NC}"
     fi
 
     echo ""
