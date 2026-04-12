@@ -1,4 +1,3 @@
-cat << 'EOF' > hy2_install.sh
 #!/bin/bash
 
 # 颜色定义
@@ -38,8 +37,8 @@ uninstall() {
         rc-update del hysteria default 2>/dev/null
         rm -f /etc/init.d/hysteria
     else
-        systemctl stop hysteria
-        systemctl disable hysteria
+        systemctl stop hysteria 2>/dev/null
+        systemctl disable hysteria 2>/dev/null
         rm -f /etc/systemd/system/hysteria.service
         systemctl daemon-reload
     fi
@@ -118,12 +117,14 @@ else
 [Unit]
 Description=Hysteria 2 Server
 After=network.target
+
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/hysteria server --config /etc/hysteria/config.yaml
 Restart=always
 RestartSec=5
 User=root
+
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -132,15 +133,14 @@ EOF
     systemctl start hysteria
 fi
 
-# 获取 IP (处理超时情况)
+# 获取 IP
 IPV4=$(curl -s4 --max-time 5 https://api64.ipify.org)
 IPV6=$(curl -s6 --max-time 5 https://api64.ipify.org)
 
-# 生成链接函数，添加 alpn=h3
+# 生成链接函数
 gen_link() {
     local ip=$1
     local label=$2
-    # 包含 insecure=1, sni, 和 alpn=h3
     echo "hysteria2://$PASSWORD@$ip:$PORT/?insecure=1&sni=$SNI&alpn=h3#Hy2_$label"
 }
 
@@ -148,31 +148,18 @@ echo -e "\n${GREEN}==========================================="
 echo -e "Hysteria 2 安装完成！"
 echo -e "===========================================${NC}"
 
-if [ -z "$IPV4" ] && [ -z "$IPV6" ]; then
-    echo -e "${RED}无法自动检测公网 IP，请手动替换以下链接中的 IP 地址。${NC}"
-    gen_link "YOUR_IP" "Manual"
-else
-    if [ -n "$IPV4" ]; then
-        echo -e "${YELLOW}IPv4 节点链接 (已添加 alpn=h3):${NC}"
-        gen_link "$IPV4" "V4_Standard"
-        echo ""
-    fi
-
-    if [ -n "$IPV6" ]; then
-        echo -e "${YELLOW}IPv6 节点链接 (已添加 alpn=h3):${NC}"
-        gen_link "[$IPV6]" "V6_Standard"
-        echo ""
-    fi
+if [ -n "$IPV4" ]; then
+    echo -e "${YELLOW}IPv4 链接:${NC}"
+    gen_link "$IPV4" "V4"
+    echo ""
 fi
 
-echo -e "${GREEN}配置详情：${NC}"
-echo -e "端口: $PORT (UDP)"
-echo -e "密码: $PASSWORD"
-echo -e "SNI:  $SNI"
-echo -e "-------------------------------------------"
-echo -e "${YELLOW}注意：v2rayN 导入后请确保“跳过证书验证”已勾选。${NC}"
-echo -e "卸载命令: bash $0 uninstall"
+if [ -n "$IPV6" ]; then
+    echo -e "${YELLOW}IPv6 链接:${NC}"
+    gen_link "[$IPV6]" "V6"
+    echo ""
+fi
+
+echo -e "端口: $PORT | 密码: $PASSWORD"
+echo -e "卸载: bash $0 uninstall"
 echo -e "${GREEN}===========================================${NC}"
-EOF
-chmod +x hy2_install.sh
-./hy2_install.sh
