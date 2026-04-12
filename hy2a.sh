@@ -71,7 +71,7 @@ mkdir -p /etc/hysteria/certs
 
 # 随机参数 (20000 以上)
 PORT=$((RANDOM % 45036 + 20000))
-PASSWORD=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 16 | head -n 1)
+PASSWORD=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 12 | head -n 1)
 SNI="www.bing.com"
 
 # 生成自签名证书
