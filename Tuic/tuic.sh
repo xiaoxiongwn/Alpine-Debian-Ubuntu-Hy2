@@ -122,22 +122,6 @@ EOF
         service ${SERVICE_NAME} restart
     fi
 
-    # 检测服务运行情况
-    echo "🔍 检测 TUIC 服务状态..."
-    sleep 2
-
-    if ! pgrep -f tuic-server >/dev/null; then
-        echo "❌ TUIC 未运行"
-        tail -n 20 /var/log/messages 2>/dev/null || journalctl -n 20
-        exit 1
-    fi
-
-    if ss -luntp | grep ${PORT} >/dev/null; then
-        echo "✅ 端口 ${PORT} 监听正常"
-    else
-        echo "⚠️ 端口 ${PORT} 未监听"
-    fi
-
     # 输出节点信息
     IPV4=$(curl -s4 ip.sb || true)
     IPV6=$(curl -s6 ip.sb || true)
