@@ -16,7 +16,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 自动检测开启BBR
 
-使用 www.bing.com 自签证书，跳过证书验证设置true
+使用 bing 自签证书，跳过证书验证设置true
 
 首次安装端口随机，NAT小鸡可以在配置文件中更改端口
 
