@@ -39,6 +39,14 @@ fi
 PASSWORD=$(openssl rand -hex 8)
 mkdir -p "$WORKDIR"
 
+# BBR开启检测
+if [ "$OS" != "alpine" ] && [ "$(sysctl -n net.core.default_qdisc)" != "fq" ]; then
+    echo "▶ 开启内核 BBR..."
+    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+    sysctl -p
+fi
+
 # 端口（仅首次生成）
 if [ ! -f "$PORT_FILE" ]; then
     PORT=$(( ( RANDOM % 40000 ) + 20000 ))
