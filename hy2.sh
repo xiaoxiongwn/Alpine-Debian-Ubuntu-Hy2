@@ -36,7 +36,7 @@ else
     apt install -y curl openssl ca-certificates bash
 fi
 
-PASSWORD=$(openssl rand -hex 8)
+PASSWORD=$(openssl rand -hex 4)
 mkdir -p "$WORKDIR"
 
 # BBR开启检测
