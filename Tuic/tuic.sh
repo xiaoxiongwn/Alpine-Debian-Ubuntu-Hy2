@@ -101,17 +101,25 @@ EOF
         systemctl daemon-reexec
         systemctl enable ${SERVICE_NAME}
         systemctl restart ${SERVICE_NAME}
-    else
+  else
+        # 针对 OpenRC 的优化版
         cat > /etc/init.d/${SERVICE_NAME} <<EOF
 #!/sbin/openrc-run
+description="TUIC v5 Server"
 command="${BIN}"
 command_args="-c ${CONF}"
+pidfile="/run/\${RC_SVCNAME}.pid"
 command_background=true
-EOF
 
+# 确保在启动前依赖网络
+depend() {
+    need net
+    after firewall
+}
+EOF
         chmod +x /etc/init.d/${SERVICE_NAME}
         rc-update add ${SERVICE_NAME} default
-        service ${SERVICE_NAME} start
+        service ${SERVICE_NAME} restart
     fi
 
     # 检测服务运行情况
