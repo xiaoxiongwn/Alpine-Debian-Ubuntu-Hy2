@@ -66,7 +66,7 @@ show_info() {
     echo -e "${GREEN}=======================================${NC}\n"
 }
 
-# 修改端口 (手动或随机)
+# 更改端口 (手动或随机)
 change_port() {
     if [ ! -f "$CONF" ]; then
         echo -e "${RED}❌ 请先安装 Hysteria2${NC}"; return
@@ -90,7 +90,7 @@ change_port() {
     command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
     
     restart_service
-    echo -e "${GREEN}✅ 端口已修改为 $NEW_PORT${NC}"
+    echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
     echo -e "${GREEN}✅ hysteria2 服务已重启"
     show_info
 }
@@ -197,7 +197,7 @@ echo -e "${GREEN}Hysteria2 管理脚本${NC}"
 echo "--------------------------"
 echo "1. 安装 Hysteria2"
 echo "2. 查看配置信息"
-echo "3. 修改监听端口"
+echo "3. 更改监听端口"
 echo "4. 重启服务"
 echo "5. 卸载 Hysteria2"
 echo "0. 退出"
