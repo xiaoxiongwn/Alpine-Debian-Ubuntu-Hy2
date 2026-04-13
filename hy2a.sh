@@ -11,13 +11,11 @@ PORT_FILE="$WORKDIR/port.txt"
 PASS_FILE="$WORKDIR/password.txt"
 ### =====================
 
-# 颜色定义
 GREEN='\e[32m'
 RED='\e[31m'
 YELLOW='\e[33m'
 NC='\e[0m'
 
-# 权限检查
 [[ "$(id -u)" != "0" ]] && { echo -e "${RED}❌ 请使用 root 运行${NC}"; exit 1; }
 
 # 环境判断
@@ -30,44 +28,68 @@ else
     exit 1
 fi
 
-# --- 功能模块 ---
+# 重启服务函数
+restart_service() {
+    if [ "$OS" = "alpine" ]; then
+        rc-service hysteria restart
+    else
+        systemctl restart hysteria
+    fi
+}
 
+# 查看信息函数
 show_info() {
     if [ ! -f "$CONF" ]; then
-        echo -e "${RED}❌ Hysteria2 未安装或配置文件不存在${NC}"
+        echo -e "${RED}❌ Hysteria2 未安装${NC}"
         return
     fi
     PORT=$(cat "$PORT_FILE")
     PASSWORD=$(cat "$PASS_FILE")
     IP=$(curl -s https://api.ipify.org || curl -s ifconfig.me)
-    IPV6=$(curl -6 -s https://api64.ipify.org 2>/dev/null || true)
-    
-    LINK_V4="hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv4"
     
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
-    echo -e "📌 IPv4: ${YELLOW}$IP${NC}"
-    [[ -n "$IPV6" ]] && echo -e "📌 IPv6: ${YELLOW}$IPV6${NC}"
-    echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
-    echo -e "🔐 密码: ${YELLOW}$PASSWORD${NC}"
-    echo -e "\n📎 节点链接:"
-    echo -e "${GREEN}${LINK_V4}${NC}"
-    [[ -n "$IPV6" ]] && echo -e "${GREEN}hy2://$PASSWORD@[$IPV6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}-IPv6${NC}"
+    echo -e "📌 当前端口: ${YELLOW}$PORT${NC}"
+    echo -e "🔐 当前密码: ${YELLOW}$PASSWORD${NC}"
+    echo -e "\n📎 IPv4 链接:"
+    echo -e "${GREEN}hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}${NC}"
     echo -e "${GREEN}=======================================${NC}\n"
 }
 
-install_hy2() {
-    echo -e "${YELLOW}▶ 开始安装...${NC}"
+# 修改端口函数
+change_port() {
+    if [ ! -f "$CONF" ]; then
+        echo -e "${RED}❌ 请先安装 Hysteria2${NC}"
+        return
+    fi
+    OLD_PORT=$(cat "$PORT_FILE")
+    echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
+    read -p "请输入新端口 (1-65535): " NEW_PORT
     
-    # 依赖安装
-    if [ "$OS" = "alpine" ]; then
-        apk add --no-cache curl openssl ca-certificates bash
-    else
-        apt update && apt install -y curl openssl ca-certificates bash
+    if [[ ! "$NEW_PORT" =~ ^[0-9]+$ ]] || [ "$NEW_PORT" -lt 1 ] || [ "$NEW_PORT" -gt 65535 ]; then
+        echo -e "${RED}❌ 输入无效${NC}"
+        return
     fi
 
-    mkdir -p "$WORKDIR"
+    # 修改配置文件 (使用 sed 替换 listen 行)
+    sed -i "s/listen: :$OLD_PORT/listen: :$NEW_PORT/g" "$CONF"
+    echo "$NEW_PORT" > "$PORT_FILE"
     
-    # 资源下载
+    # 防火墙处理
+    if command -v ufw >/dev/null 2>&1; then
+        ufw allow "$NEW_PORT"/udp
+    fi
+
+    restart_service
+    echo -e "${GREEN}✅ 端口已修改为 $NEW_PORT 并已重启服务${NC}"
+    show_info
+}
+
+# 安装函数
+install_hy2() {
+    echo -e "${YELLOW}▶ 开始安装...${NC}"
+    [ "$OS" = "alpine" ] && apk add --no-cache curl openssl ca-certificates bash || (apt update && apt install -y curl openssl ca-certificates bash)
+    
+    mkdir -p "$WORKDIR"
     ARCH=$(uname -m)
     case "$ARCH" in
         x86_64) FILE="hysteria-linux-amd64" ;;
@@ -75,20 +97,16 @@ install_hy2() {
         *) echo "❌ 不支持的架构"; exit 1 ;;
     esac
 
-    echo "▶ 下载 Hysteria2 主程序..."
     curl -L -o "$BIN" "https://github.com/apernet/hysteria/releases/latest/download/$FILE"
     chmod +x "$BIN"
 
-    # 生成随机参数
     PASSWORD=$(openssl rand -hex 8)
     PORT=$(( ( RANDOM % 40000 ) + 20000 ))
     echo "$PASSWORD" > "$PASS_FILE"
     echo "$PORT" > "$PORT_FILE"
 
-    # 证书生成
     openssl req -x509 -nodes -newkey rsa:2048 -keyout "$WORKDIR/key.pem" -out "$WORKDIR/cert.pem" -days 3650 -subj "/CN=$SERVER_NAME"
 
-    # 写入配置
     cat > "$CONF" <<EOF
 listen: :$PORT
 tls:
@@ -106,7 +124,6 @@ masquerade:
     rewriteHost: true
 EOF
 
-    # 服务启动
     if [ "$OS" = "alpine" ]; then
         cat > /etc/init.d/hysteria <<EOF
 #!/sbin/openrc-run
@@ -119,7 +136,6 @@ supervisor="supervise-daemon"
 EOF
         chmod +x /etc/init.d/hysteria
         rc-update add hysteria default
-        rc-service hysteria restart
     else
         cat > /etc/systemd/system/hysteria.service <<EOF
 [Unit]
@@ -134,15 +150,16 @@ WantedBy=multi-user.target
 EOF
         systemctl daemon-reload
         systemctl enable hysteria
-        systemctl restart hysteria
     fi
     
+    restart_service
     echo -e "${GREEN}✅ 安装完成！${NC}"
     show_info
 }
 
+# 卸载函数
 uninstall_hy2() {
-    echo -e "${YELLOW}▶ 正在卸载 Hysteria2...${NC}"
+    echo -e "${YELLOW}▶ 正在卸载...${NC}"
     if [ "$OS" = "alpine" ]; then
         rc-service hysteria stop || true
         rc-update del hysteria || true
@@ -155,27 +172,27 @@ uninstall_hy2() {
     fi
     rm -rf "$WORKDIR"
     rm -f "$BIN"
-    echo -e "${GREEN}✅ 卸载成功！相关文件已清除。${NC}"
+    echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
-# --- 交互菜单 ---
-echo -e "${GREEN}Hysteria2 管理脚本${NC}"
-echo "-------------------"
+# --- 主菜单 ---
+clear
+echo -e "${GREEN}Hysteria2 管理脚本 V2.0${NC}"
+echo "--------------------------"
 echo "1. 安装 Hysteria2"
 echo "2. 查看配置信息"
-echo "3. 卸载 Hysteria2"
+echo "3. 修改监听端口"
 echo "4. 重启服务"
+echo "5. 卸载 Hysteria2"
 echo "0. 退出"
-echo "-------------------"
-read -p "请输入选项: " choice
+echo "--------------------------"
+read -p "请选择: " choice
 
 case $choice in
     1) install_hy2 ;;
     2) show_info ;;
-    3) uninstall_hy2 ;;
-    4) 
-        if [ "$OS" = "alpine" ]; then rc-service hysteria restart; else systemctl restart hysteria; fi
-        echo -e "${GREEN}服务已重启${NC}"
-        ;;
+    3) change_port ;;
+    4) restart_service && echo -e "${GREEN}服务已重启${NC}" ;;
+    5) uninstall_hy2 ;;
     *) exit 0 ;;
 esac
