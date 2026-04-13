@@ -7,7 +7,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 支持Alpine、Debian、Ubuntu系统，进程监视守护，开机自启动
 
-使用 bing 自签证书，跳过证书验证设置true
+使用 bing 自签证书，TLS证书验证设置允许不安全
 
 首次安装端口随机，NAT小鸡可自行更改
 
