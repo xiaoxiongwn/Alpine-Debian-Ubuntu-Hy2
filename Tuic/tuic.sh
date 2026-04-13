@@ -1,70 +1,124 @@
 #!/usr/bin/env bash
 set -e
 
+### ===== 配置参数 =====
 WORK_DIR="/usr/local/tuic"
 BIN="${WORK_DIR}/tuic-server"
 CONF="${WORK_DIR}/config.yaml"
 SERVICE_NAME="tuic"
+### =====================
 
-# 安装函数
+GREEN='\033[32m'
+YELLOW='\033[33m'
+RED='\033[31m'
+NC='\033[0m'
+
+[[ "$(id -u)" != "0" ]] && { echo -e "${RED}❌ 请使用 root 运行${NC}"; exit 1; }
+
+# 环境判断
+if [ -f /etc/alpine-release ]; then
+    OS="alpine"
+elif [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then
+    OS="debian"
+else
+    echo -e "${RED}❌ 不支持的系统${NC}"; exit 1
+fi
+
+# 重启服务
+restart_service() {
+    if command -v systemctl >/dev/null; then
+        systemctl restart ${SERVICE_NAME}
+    else
+        rc-service ${SERVICE_NAME} restart
+    fi
+}
+
+# 获取并显示信息
+show_info() {
+    if [ ! -f "$CONF" ]; then
+        echo -e "${RED}❌ TUIC 未安装${NC}"; return
+    fi
+    
+    # 提取配置
+    PORT=$(grep "server:" "$CONF" | cut -d':' -f3 | tr -d '"' | tr -d ']')
+    UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | cut -d'"' -f2)
+    PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | cut -d'"' -f4)
+    
+    IPV4=$(curl -s4 ip.sb || curl -s4 ifconfig.me || echo "未检测到")
+    IPV6=$(curl -s6 ip.sb || curl -s6 ifconfig.me || echo "")
+
+    echo -e "\n${GREEN}========== TUIC v5 配置信息 ==========${NC}"
+    echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
+    echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
+    echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
+    
+    echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
+    echo -e "${YELLOW}tuic://$UUID:$PASS@$IPV4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
+    
+    if [[ -n "$IPV6" && "$IPV6" != "未检测到" ]]; then
+        echo -e "\n${GREEN}📎 IPv6 链接:${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IPV6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
+    fi
+    echo -e "${GREEN}=======================================${NC}\n"
+}
+
+# 修改端口
+change_port() {
+    if [ ! -f "$CONF" ]; then
+        echo -e "${RED}❌ 请先安装 TUIC${NC}"; return
+    fi
+    
+    # 获取旧端口
+    OLD_PORT=$(grep "server:" "$CONF" | cut -d':' -f3 | tr -d '"' | tr -d ']')
+    echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
+    read -p "请输入新端口 (10000-65535，回车随机): " NEW_PORT
+    
+    if [ -z "$NEW_PORT" ]; then
+        NEW_PORT=$(( ( RANDOM % 50000 ) + 10000 ))
+    fi
+
+    if [[ ! "$NEW_PORT" =~ ^[0-9]+$ ]] || [ "$NEW_PORT" -lt 1 ] || [ "$NEW_PORT" -gt 65535 ]; then
+        echo -e "${RED}❌ 输入无效${NC}"; return
+    fi
+
+    # 替换配置文件中的端口
+    sed -i "s/:$OLD_PORT/:$NEW_PORT/g" "$CONF"
+    
+    # 防火墙
+    command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
+    
+    restart_service
+    echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
+    echo -e "${GREEN}✅ TUIC服务已重启"
+    show_info
+}
+
+# 安装
 install_tuic() {
-    echo "🚀 正在安装 TUIC ..."
+    echo -e "${YELLOW}▶ 正在安装依赖...${NC}"
+    [ "$OS" = "alpine" ] && apk add --no-cache curl openssl bash openrc || (apt update -y && apt install -y curl openssl)
 
-    # 检测架构
     ARCH=$(uname -m)
     case "$ARCH" in
         x86_64) TUIC_ARCH="x86_64" ;;
         aarch64|arm64) TUIC_ARCH="aarch64" ;;
-        armv7l) TUIC_ARCH="armv7" ;;
         *) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
     esac
 
-    # 检测系统
-    if [ -f /etc/alpine-release ]; then
-        OS="alpine"
-    elif [ -f /etc/debian_version ]; then
-        OS="debian"
-    else
-        echo "❌ 不支持的系统"; exit 1
-    fi
-
-    # 安装依赖
-    if [ "$OS" = "alpine" ]; then
-        apk add --no-cache curl openssl iptables bash openrc
-    else
-        apt update -y
-        apt install -y curl openssl iptables
-    fi
-
     mkdir -p $WORK_DIR
-    cd $WORK_DIR
-
-    # 下载 TUIC 可执行文件
+    echo -e "${YELLOW}▶ 下载 TUIC Server...${NC}"
     URL="https://github.com/Itsusinn/tuic/releases/latest/download/tuic-server-${TUIC_ARCH}-linux-musl"
     curl -L -o $BIN $URL || curl -L -o $BIN https://ghfast.top/$URL
     chmod +x $BIN
 
-    # 随机端口 / UUID / 密码
-    PORT=$(shuf -i20000-60000 -n1)
+    PORT=$(( ( RANDOM % 50000 ) + 10000 ))
     UUID=$(cat /proc/sys/kernel/random/uuid)
     PASS=$(openssl rand -hex 4)
-
-    # 检测 IPv6 支持
-    if ip -6 addr >/dev/null 2>&1; then
-        IPV6_SUPPORTED=true
-    else
-        IPV6_SUPPORTED=false
-    fi
-
-    # 生成 YAML 配置
-    if $IPV6_SUPPORTED; then
-        SERVER_BIND="[::]:${PORT}"
-    else
-        SERVER_BIND="0.0.0.0:${PORT}"
-    fi
+    BIND_ADDR="0.0.0.0"
+    ip -6 addr | grep -q "global" && BIND_ADDR="[::]"
 
     cat > $CONF <<EOF
-server: "${SERVER_BIND}"
+server: "${BIND_ADDR}:${PORT}"
 users:
   "${UUID}": "${PASS}"
 congestion_control: "bbr"
@@ -77,32 +131,25 @@ tls:
     - "h3"
 EOF
 
-    # 生成自签证书
     openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
-        -keyout key.pem -out cert.pem \
+        -keyout "${WORK_DIR}/key.pem" -out "${WORK_DIR}/cert.pem" \
         -subj "/CN=www.bing.com" -days 3650 -nodes
 
-    # 写入 systemd / openrc 服务
     if command -v systemctl >/dev/null; then
         cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=TUIC Server
 After=network.target
-
 [Service]
 ExecStart=${BIN} -c ${CONF}
 Restart=always
-RestartSec=3
-
+LimitNOFILE=1048576
 [Install]
 WantedBy=multi-user.target
 EOF
-
-        systemctl daemon-reexec
+        systemctl daemon-reload
         systemctl enable ${SERVICE_NAME}
-        systemctl restart ${SERVICE_NAME}
-  else
-        # 针对 OpenRC 的优化版
+    else
         cat > /etc/init.d/${SERVICE_NAME} <<EOF
 #!/sbin/openrc-run
 description="TUIC v5 Server"
@@ -110,66 +157,53 @@ command="${BIN}"
 command_args="-c ${CONF}"
 pidfile="/run/\${RC_SVCNAME}.pid"
 command_background=true
-
-# 确保在启动前依赖网络
 depend() {
     need net
-    after firewall
 }
 EOF
         chmod +x /etc/init.d/${SERVICE_NAME}
         rc-update add ${SERVICE_NAME} default
-        service ${SERVICE_NAME} restart
     fi
 
- # 定义颜色变量
-    GREEN='\033[32m'
-    NC='\033[0m' # No Color (重置颜色)
-
-    # 输出节点信息
-    IPV4=$(curl -s4 ip.sb || true)
-    IPV6=$(curl -s6 ip.sb || true)
-
-    echo ""
-    echo "====== TUIC 节点信息 ======"
-    
-    if [ -n "$IPV4" ]; then
-        echo -e "IPv4 链接:"
-        echo -e "${GREEN}tuic://${UUID}:${PASS}@${IPV4}:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV4${NC}"
-    fi
-
-    if $IPV6_SUPPORTED && [ -n "$IPV6" ]; then
-        echo ""
-        echo -e "IPv6 链接:"
-        echo -e "${GREEN}tuic://${UUID}:${PASS}@[${IPV6}]:${PORT}?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC-IPV6${NC}"
-    fi
-
-    echo ""
-    echo "✅ 安装完成"
+    restart_service
+    echo -e "${GREEN}✅ 安装完成${NC}"
+    show_info
 }
 
-# 卸载函数
+# 卸载
 uninstall_tuic() {
-    echo "🗑️ 卸载 TUIC..."
-
     if command -v systemctl >/dev/null; then
         systemctl stop ${SERVICE_NAME} || true
         systemctl disable ${SERVICE_NAME} || true
         rm -f /etc/systemd/system/${SERVICE_NAME}.service
-        systemctl daemon-reexec
+        systemctl daemon-reload
     else
-        service ${SERVICE_NAME} stop || true
+        rc-service ${SERVICE_NAME} stop || true
         rc-update del ${SERVICE_NAME} || true
         rm -f /etc/init.d/${SERVICE_NAME}
     fi
-
     rm -rf $WORK_DIR
-    echo "✅ TUIC 已完全卸载"
+    echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
-# 主逻辑
-if [[ "$1" == "uninstall" ]]; then
-    uninstall_tuic
-else
-    install_tuic
-fi
+# --- 菜单 ---
+clear
+echo -e "${GREEN}TUIC 管理脚本${NC}"
+echo "--------------------------"
+echo "1. 安装 TUIC"
+echo "2. 查看配置信息"
+echo "3. 更改监听端口"
+echo "4. 重启服务"
+echo "5. 卸载 TUIC"
+echo "0. 退出"
+echo "--------------------------"
+read -p "请选择: " choice
+
+case $choice in
+    1) install_tuic ;;
+    2) show_info ;;
+    3) change_port ;;
+    4) restart_service && echo -e "${GREEN}服务已重启${NC}" ;;
+    5) uninstall_tuic ;;
+    *) exit 0 ;;
+esac
