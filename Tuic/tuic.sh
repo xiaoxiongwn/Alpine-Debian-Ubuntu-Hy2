@@ -116,7 +116,7 @@ change_port() {
     
     restart_service
     echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
-    echo -e "${GREEN}✅ TUIC 服务已重启 $NEW_PORT${NC}"
+    echo -e "${GREEN}✅ TUIC 服务已重启"
     show_info
 }
 
