@@ -31,16 +31,27 @@ fi
 
 # 创建快捷指令函数
 create_shortcut() {
-    # 确保目标目录存在
+    # 确保目录存在
     mkdir -p /usr/local/bin
     
-    # 复制并授权
+    # 复制脚本
     cp "$0" "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
     
-    # 额外在 /usr/bin 创建一个软链接（Alpine 最稳妥的路径）
+    # 【修复关键】在 Alpine 极其可靠的 /usr/bin 创建软链接
     ln -sf "$SCRIPT_PATH" /usr/bin/hy2
     
+    # 针对 Alpine 强制刷新路径缓存
+    if [ "$OS" = "alpine" ]; then
+        # 确保 /usr/local/bin 在当前会话和未来会话的 PATH 中
+        if ! echo "$PATH" | grep -q "/usr/local/bin"; then
+            export PATH=$PATH:/usr/local/bin
+            echo 'export PATH=$PATH:/usr/local/bin' >> /etc/profile
+        fi
+        # 刷新 ash/bash 缓存
+        hash -r 2>/dev/null || true
+    fi
+
     echo -e "${GREEN}▶ 已创建快捷指令: ${YELLOW}hy2${NC}"
 }
 
