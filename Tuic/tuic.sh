@@ -70,28 +70,41 @@ change_port() {
         echo -e "${RED}❌ 请先安装 TUIC${NC}"; return
     fi
     
-    # 获取旧端口
-    OLD_PORT=$(grep "server:" "$CONF" | cut -d':' -f3 | tr -d '"' | tr -d ']')
-    echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
-    read -p "请输入新端口 (10000-65535，回车随机): " NEW_PORT
+    # 提取旧端口
+    OLD_PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
     
-    if [ -z "$NEW_PORT" ]; then
-        NEW_PORT=$(( ( RANDOM % 50000 ) + 10000 ))
-    fi
+    echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
+    read -p "请输入新端口 (10000-65535，直接回车则随机): " NEW_PORT
+    
+    [[ -z "$NEW_PORT" ]] && NEW_PORT=$(( ( RANDOM % 50000 ) + 10000 ))
 
     if [[ ! "$NEW_PORT" =~ ^[0-9]+$ ]] || [ "$NEW_PORT" -lt 1 ] || [ "$NEW_PORT" -gt 65535 ]; then
         echo -e "${RED}❌ 输入无效${NC}"; return
     fi
 
-    # 替换配置文件中的端口
-    sed -i "s/:$OLD_PORT/:$NEW_PORT/g" "$CONF"
+    sed -i "s/\(:[0-9]\{1,5\}\)\"/\:$NEW_PORT\"/g" "$CONF"
     
-    # 防火墙
-    command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
+    # 校验配置文件是否更改成功
+    CHECK_PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
+    
+    if [ "$CHECK_PORT" != "$NEW_PORT" ]; then
+        echo -e "${RED}❌ 自动修改失败，正在尝试强制写入...${NC}"
+        # 备用方案：通过重新生成 server 行来强制修改
+        BIND_ADDR="0.0.0.0"
+        grep -q "\[::\]" "$CONF" && BIND_ADDR="[::]"
+        sed -i "/server:/c\server: \"${BIND_ADDR}:${NEW_PORT}\"" "$CONF"
+    fi
+
+    # 放行防火墙 (Debian 常用 ufw 或 iptables)
+    if command -v ufw >/dev/null 2>&1; then
+        ufw allow "$NEW_PORT"/udp
+    elif command -v iptables >/dev/null 2>&1; then
+        iptables -I INPUT -p udp --dport "$NEW_PORT" -j ACCEPT
+    fi
     
     restart_service
     echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
-    echo -e "${GREEN}✅ TUIC服务已重启"
+    echo -e "${GREEN}✅ TUIC 服务已重启 $NEW_PORT${NC}"
     show_info
 }
 
