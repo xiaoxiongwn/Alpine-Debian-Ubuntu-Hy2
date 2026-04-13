@@ -9,7 +9,6 @@ BIN="/usr/local/bin/hysteria"
 CONF="$WORKDIR/config.yaml"
 PORT_FILE="$WORKDIR/port.txt"
 PASS_FILE="$WORKDIR/password.txt"
-SCRIPT_PATH="/usr/local/bin/hy2" # 快捷指令路径
 ### =====================
 
 GREEN='\e[32m'
@@ -29,33 +28,7 @@ else
     exit 1
 fi
 
-# 创建快捷指令函数
-create_shortcut() {
-    # 确保目录存在
-    mkdir -p /usr/local/bin
-    
-    # 复制脚本
-    cp "$0" "$SCRIPT_PATH"
-    chmod +x "$SCRIPT_PATH"
-    
-    # 【修复关键】在 Alpine 极其可靠的 /usr/bin 创建软链接
-    ln -sf "$SCRIPT_PATH" /usr/bin/hy2
-    
-    # 针对 Alpine 强制刷新路径缓存
-    if [ "$OS" = "alpine" ]; then
-        # 确保 /usr/local/bin 在当前会话和未来会话的 PATH 中
-        if ! echo "$PATH" | grep -q "/usr/local/bin"; then
-            export PATH=$PATH:/usr/local/bin
-            echo 'export PATH=$PATH:/usr/local/bin' >> /etc/profile
-        fi
-        # 刷新 ash/bash 缓存
-        hash -r 2>/dev/null || true
-    fi
-
-    echo -e "${GREEN}▶ 已创建快捷指令: ${YELLOW}hy2${NC}"
-}
-
-# 重启服务函数
+# 重启服务
 restart_service() {
     if [ "$OS" = "alpine" ]; then
         rc-service hysteria restart
@@ -64,7 +37,7 @@ restart_service() {
     fi
 }
 
-# 查看信息函数
+# 获取并显示信息 (双栈支持)
 show_info() {
     if [ ! -f "$CONF" ]; then
         echo -e "${RED}❌ Hysteria2 未安装${NC}"
@@ -72,46 +45,58 @@ show_info() {
     fi
     PORT=$(cat "$PORT_FILE")
     PASSWORD=$(cat "$PASS_FILE")
-    IP=$(curl -s https://api.ipify.org || curl -s ifconfig.me)
     
+    # 分别获取 IPv4 和 IPv6
+    IP4=$(curl -s4 https://api.ipify.org || curl -s4 ifconfig.me || echo "未检测到IPv4")
+    IP6=$(curl -s6 https://api64.ipify.org || curl -s6 ifconfig.me || echo "")
+
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
-    echo -e "📌 当前端口: ${YELLOW}$PORT${NC}"
-    echo -e "🔐 当前密码: ${YELLOW}$PASSWORD${NC}"
-    echo -e "\n📎 IPv4 链接:"
-    echo -e "${GREEN}hy2://$PASSWORD@$IP:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}${NC}"
+    echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
+    [[ -n "$IP6" ]] && echo -e "📌 IPv6 地址: ${YELLOW}$IP6${NC}"
+    echo -e "🎲 监听端口: ${YELLOW}$PORT${NC}"
+    echo -e "🔐 验证密码: ${YELLOW}$PASSWORD${NC}"
+    
+    echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}"
+    echo -e "${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
+    
+    if [[ -n "$IP6" ]]; then
+        echo -e "\n${GREEN}📎 节点链接 (IPv6):${NC}"
+        echo -e "${YELLOW}hy2://$PASSWORD@[$IP6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V6${NC}"
+    fi
     echo -e "${GREEN}=======================================${NC}\n"
 }
 
-# 修改端口函数
+# 修改端口 (手动或随机)
 change_port() {
     if [ ! -f "$CONF" ]; then
-        echo -e "${RED}❌ 请先安装 Hysteria2${NC}"
-        return
+        echo -e "${RED}❌ 请先安装 Hysteria2${NC}"; return
     fi
     OLD_PORT=$(cat "$PORT_FILE")
-    echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
-    read -p "请输入新端口 (1-65535): " NEW_PORT
+    echo -e "当前端口为: ${YELLOW}$OLD_PORT${NC}"
+    read -p "请输入新端口 (直接回车则随机生成 10000-65535): " NEW_PORT
     
+    if [ -z "$NEW_PORT" ]; then
+        NEW_PORT=$(( ( RANDOM % 55535 ) + 10000 ))
+    fi
+
     if [[ ! "$NEW_PORT" =~ ^[0-9]+$ ]] || [ "$NEW_PORT" -lt 1 ] || [ "$NEW_PORT" -gt 65535 ]; then
-        echo -e "${RED}❌ 输入无效${NC}"
-        return
+        echo -e "${RED}❌ 输入无效${NC}"; return
     fi
 
     sed -i "s/listen: :$OLD_PORT/listen: :$NEW_PORT/g" "$CONF"
     echo "$NEW_PORT" > "$PORT_FILE"
     
-    if command -v ufw >/dev/null 2>&1; then
-        ufw allow "$NEW_PORT"/udp
-    fi
-
+    # 尝试放行防火墙
+    command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
+    
     restart_service
-    echo -e "${GREEN}✅ 端口已修改并重启服务${NC}"
+    echo -e "${GREEN}✅ 端口已更换为 $NEW_PORT${NC}"
     show_info
 }
 
-# 安装函数
+# 安装
 install_hy2() {
-    echo -e "${YELLOW}▶ 开始安装...${NC}"
+    echo -e "${YELLOW}▶ 正在安装依赖...${NC}"
     [ "$OS" = "alpine" ] && apk add --no-cache curl openssl ca-certificates bash || (apt update && apt install -y curl openssl ca-certificates bash)
     
     mkdir -p "$WORKDIR"
@@ -122,16 +107,20 @@ install_hy2() {
         *) echo "❌ 不支持的架构"; exit 1 ;;
     esac
 
+    echo -e "${YELLOW}▶ 下载 Hysteria2 主程序...${NC}"
     curl -L -o "$BIN" "https://github.com/apernet/hysteria/releases/latest/download/$FILE"
     chmod +x "$BIN"
 
-    PASSWORD=$(openssl rand -hex 4)
-    PORT=$(( ( RANDOM % 40000 ) + 20000 ))
+    # 生成随机密码和 10000 以上随机端口
+    PASSWORD=$(openssl rand -hex 8)
+    PORT=$(( ( RANDOM % 55535 ) + 10000 ))
     echo "$PASSWORD" > "$PASS_FILE"
     echo "$PORT" > "$PORT_FILE"
 
+    # 证书生成
     openssl req -x509 -nodes -newkey rsa:2048 -keyout "$WORKDIR/key.pem" -out "$WORKDIR/cert.pem" -days 3650 -subj "/CN=$SERVER_NAME"
 
+    # 写入配置
     cat > "$CONF" <<EOF
 listen: :$PORT
 tls:
@@ -149,6 +138,7 @@ masquerade:
     rewriteHost: true
 EOF
 
+    # 服务部署
     if [ "$OS" = "alpine" ]; then
         cat > /etc/init.d/hysteria <<EOF
 #!/sbin/openrc-run
@@ -178,14 +168,13 @@ EOF
     fi
     
     restart_service
-    create_shortcut # <--- 安装最后一步创建快捷指令
-    echo -e "${GREEN}✅ 安装完成！${NC}"
+    echo -e "${GREEN}✅ Hysteria2 安装完成！${NC}"
     show_info
 }
 
-# 卸载函数
+# 卸载
 uninstall_hy2() {
-    echo -e "${YELLOW}▶ 正在卸载...${NC}"
+    echo -e "${YELLOW}▶ 正在清理系统...${NC}"
     if [ "$OS" = "alpine" ]; then
         rc-service hysteria stop || true
         rc-update del hysteria || true
@@ -198,22 +187,21 @@ uninstall_hy2() {
     fi
     rm -rf "$WORKDIR"
     rm -f "$BIN"
-    rm -f "$SCRIPT_PATH" # 删除快捷指令
     echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
-# --- 主菜单 ---
+# --- 菜单界面 ---
 clear
-echo -e "${GREEN}Hysteria2 管理脚本 V3.0${NC}"
+echo -e "${GREEN}Hysteria2 管理脚本${NC}"
 echo "--------------------------"
-echo "1. 安装 Hysteria2 "
+echo "1. 安装 Hysteria2"
 echo "2. 查看配置信息"
 echo "3. 修改监听端口"
 echo "4. 重启服务"
 echo "5. 卸载 Hysteria2"
 echo "0. 退出"
 echo "--------------------------"
-read -p "请选择: " choice
+read -p "请输入数字选择: " choice
 
 case $choice in
     1) install_hy2 ;;
