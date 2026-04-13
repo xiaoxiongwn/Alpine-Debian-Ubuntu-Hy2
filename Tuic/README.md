@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 一键安装
+## 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Tuic/tuic.sh)
