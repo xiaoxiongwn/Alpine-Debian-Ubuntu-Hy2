@@ -51,8 +51,8 @@ show_info() {
     echo -e "${YELLOW}正在检测公网 IP 地址...${NC}"
     
     # 获取 IP (设置 5 秒超时)
-    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
-    IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
+    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "未检测到")
+    IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "未检测到")
 
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
     echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
