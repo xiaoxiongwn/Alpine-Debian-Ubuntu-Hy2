@@ -47,8 +47,8 @@ show_info() {
     PASSWORD=$(cat "$PASS_FILE")
     
     # 分别获取 IPv4 和 IPv6
-    IP4=$(curl -s4 https://api.ipify.org || curl -s4 ifconfig.me || echo "未检测到IPv4")
-    IP6=$(curl -s6 https://api64.ipify.org || curl -s6 ifconfig.me || echo "")
+    IP4=$(curl -s4 ip.sb || curl -s4 ifconfig.me || echo "未检测到IPv4")
+    IP6=$(curl -s6 ip.sb || curl -s6 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
     echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
