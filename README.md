@@ -5,13 +5,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 ```
 
-# 🗑 卸载
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Delete.sh)
-
-```
-
 支持Alpine、Debian、Ubuntu系统，进程监视守护，开机自启动
 
 使用 bing 自签证书，跳过证书验证设置true
