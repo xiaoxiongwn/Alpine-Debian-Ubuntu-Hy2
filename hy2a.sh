@@ -90,7 +90,8 @@ change_port() {
     command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
     
     restart_service
-    echo -e "${GREEN}✅ 端口已更换为 $NEW_PORT${NC}"
+    echo -e "${GREEN}✅ 端口已修改为 $NEW_PORT${NC}"
+    echo -e "${GREEN}✅ hysteria2 服务已重启"
     show_info
 }
 
@@ -112,12 +113,12 @@ install_hy2() {
     chmod +x "$BIN"
 
     # 生成随机密码和 10000 以上随机端口
-    PASSWORD=$(openssl rand -hex 8)
+    PASSWORD=$(openssl rand -hex 4)
     PORT=$(( ( RANDOM % 55535 ) + 10000 ))
     echo "$PASSWORD" > "$PASS_FILE"
     echo "$PORT" > "$PORT_FILE"
 
-    # 证书生成
+    echo -e "${YELLOW}▶ 生成自签证书...${NC}"
     openssl req -x509 -nodes -newkey rsa:2048 -keyout "$WORKDIR/key.pem" -out "$WORKDIR/cert.pem" -days 3650 -subj "/CN=$SERVER_NAME"
 
     # 写入配置
