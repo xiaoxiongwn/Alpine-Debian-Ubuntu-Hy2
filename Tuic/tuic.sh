@@ -39,27 +39,20 @@ show_info() {
         echo -e "${RED}❌ TUIC 未安装${NC}"; return
     fi
     
-    # 提取配置
-    PORT=$(grep "server:" "$CONF" | cut -d':' -f3 | tr -d '"' | tr -d ']')
-    UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | cut -d'"' -f2)
-    PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | cut -d'"' -f4)
+    # 使用 sed 提取最后一个冒号后的端口号
+    PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
+    # 提取用户 ID (UUID)
+    UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $2}')
+    # 提取密码 (Password)
+    PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $4}')
     
-    IPV4=$(curl -s4 ip.sb || curl -s4 ifconfig.me || echo "未检测到")
-    IPV6=$(curl -s6 ip.sb || curl -s6 ifconfig.me || echo "")
+    IPV4=$(curl -s4 --connect-timeout 8 ip.sb || curl -s4 --connect-timeout 8 ifconfig.me || echo "未检测到")
+    IPV6=$(curl -s6 --connect-timeout 8 ip.sb || curl -s6 --connect-timeout 8 ifconfig.me || echo "")
 
-    echo -e "\n${GREEN}========== TUIC v5 配置信息 ==========${NC}"
+    echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
     echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
-    
-    echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
-    echo -e "${YELLOW}tuic://$UUID:$PASS@$IPV4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
-    
-    if [[ -n "$IPV6" && "$IPV6" != "未检测到" ]]; then
-        echo -e "\n${GREEN}📎 IPv6 链接:${NC}"
-        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IPV6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
-    fi
-    echo -e "${GREEN}=======================================${NC}\n"
 }
 
 # 修改端口
