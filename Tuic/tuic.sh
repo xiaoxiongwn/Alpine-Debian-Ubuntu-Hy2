@@ -39,27 +39,33 @@ show_info() {
         echo -e "${RED}❌ TUIC 未安装${NC}"; return
     fi
     
-    # 使用 sed 提取最后一个冒号后的端口号
+    # 精准提取端口：适配 [::]:端口 或 0.0.0.0:端口
     PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
-    # 提取用户 ID (UUID)
+    # 提取 UUID 和 密码
     UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $2}')
-    # 提取密码 (Password)
     PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $4}')
     
-    IPV4=$(curl -s4 --connect-timeout 8 ip.sb || curl -s4 --connect-timeout 8 ifconfig.me || echo "未检测到")
-    IPV6=$(curl -s6 --connect-timeout 8 ip.sb || curl -s6 --connect-timeout 8 ifconfig.me || echo "")
+    # 获取双栈 IP (增加超时控制，防止卡死)
+    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "未检测到")
+    IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
     echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
-    echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
-    echo -e "${YELLOW}tuic://$UUID:$PASS@$IPV4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
+    # 只有检测到有效的 IPv4 才显示链接
+    if [[ "$IP4" != "未检测到" ]]; then
+        echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
+    fi
     
-    if [[ -n "$IPV6" && "$IPV6" != "未检测到" ]]; then
+    # 只有检测到有效的 IPv6 才显示链接
+    if [[ -z "$IP6" ]]; then
+        echo -e "\n${YELLOW}ℹ️ 未检测到公网 IPv6 地址${NC}"
+    else
         echo -e "\n${GREEN}📎 IPv6 链接:${NC}"
-        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IPV6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
     fi
     echo -e "${GREEN}=======================================${NC}\n"
 }
