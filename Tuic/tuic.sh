@@ -120,10 +120,15 @@ install_tuic() {
         *) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
     esac
 
-    mkdir -p $WORK_DIR
-    echo -e "${YELLOW}▶ 下载 TUIC Server...${NC}"
+mkdir -p $WORK_DIR
+    echo -e "${YELLOW}▶ 从 GitHub 官方下载 TUIC Server...${NC}"
+    
     URL="https://github.com/Itsusinn/tuic/releases/latest/download/tuic-server-${TUIC_ARCH}-linux-musl"
-    curl -L -o $BIN $URL || curl -L -o $BIN https://ghfast.top/$URL
+    
+    if ! curl -L -o $BIN "$URL"; then
+        echo -e "${RED}❌ 下载失败，请检查服务器是否能连接 GitHub${NC}"; exit 1
+    fi
+    
     chmod +x $BIN
 
     PORT=$(( ( RANDOM % 50000 ) + 10000 ))
