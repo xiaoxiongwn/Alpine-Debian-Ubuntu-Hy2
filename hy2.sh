@@ -40,28 +40,41 @@ restart_service() {
 # 获取并显示信息 (双栈支持)
 show_info() {
     if [ ! -f "$CONF" ]; then
-        echo -e "${RED}❌ Hysteria2 未安装${NC}"
+        echo -e "${RED}❌ Hysteria2 未安装或配置文件不存在${NC}"
         return
     fi
-    PORT=$(cat "$PORT_FILE")
-    PASSWORD=$(cat "$PASS_FILE")
+
+    # 提取端口和密码
+    PORT=$(grep "listen:" "$CONF" | sed 's/.*://' | tr -d ' ')
+    PASSWORD=$(grep "password:" "$CONF" | awk -F'"' '{print $2}')
+
+    echo -e "${YELLOW}正在检测公网 IP 地址...${NC}"
     
-    # 分别获取 IPv4 和 IPv6
-    IP4=$(curl -s4 ip.sb || curl -s4 ifconfig.me || echo "未检测到IPv4")
-    IP6=$(curl -s6 ip.sb || curl -s6 ifconfig.me || echo "")
+    # 获取 IP (设置 5 秒超时)
+    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
+    IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
-    echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
-    [[ -n "$IP6" ]] && echo -e "📌 IPv6 地址: ${YELLOW}$IP6${NC}"
     echo -e "🎲 监听端口: ${YELLOW}$PORT${NC}"
-    echo -e "🔐 验证密码: ${YELLOW}$PASSWORD${NC}"
+    echo -e "🔐 认证密码: ${YELLOW}$PASSWORD${NC}"
     
-    echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}"
-    echo -e "${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
-    
+    # IPv4 显示逻辑
+    if [[ -n "$IP4" ]]; then
+        echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
+        echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}"
+        echo -e "${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
+    fi
+
+    # IPv6 显示逻辑
     if [[ -n "$IP6" ]]; then
+        echo -e "📌 IPv6 地址: ${YELLOW}$IP6${NC}"
         echo -e "\n${GREEN}📎 节点链接 (IPv6):${NC}"
         echo -e "${YELLOW}hy2://$PASSWORD@[$IP6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V6${NC}"
+    fi
+
+    # 如果两个都没有检测到
+    if [[ -z "$IP4" && -z "$IP6" ]]; then
+        echo -e "${RED}❌ 无法检测到公网 IP，请检查服务器网络${NC}"
     fi
     echo -e "${GREEN}=======================================${NC}\n"
 }
