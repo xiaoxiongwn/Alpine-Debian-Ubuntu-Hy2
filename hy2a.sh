@@ -31,10 +31,17 @@ fi
 
 # 创建快捷指令函数
 create_shortcut() {
+    # 确保目标目录存在
+    mkdir -p /usr/local/bin
+    
+    # 复制并授权
     cp "$0" "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
+    
+    # 额外在 /usr/bin 创建一个软链接（Alpine 最稳妥的路径）
+    ln -sf "$SCRIPT_PATH" /usr/bin/hy2
+    
     echo -e "${GREEN}▶ 已创建快捷指令: ${YELLOW}hy2${NC}"
-    echo -e "${GREEN}▶ 下次只需输入 ${YELLOW}hy2${NC}${GREEN} 即可管理脚本${NC}"
 }
 
 # 重启服务函数
@@ -107,7 +114,7 @@ install_hy2() {
     curl -L -o "$BIN" "https://github.com/apernet/hysteria/releases/latest/download/$FILE"
     chmod +x "$BIN"
 
-    PASSWORD=$(openssl rand -hex 8)
+    PASSWORD=$(openssl rand -hex 4)
     PORT=$(( ( RANDOM % 40000 ) + 20000 ))
     echo "$PASSWORD" > "$PASS_FILE"
     echo "$PORT" > "$PORT_FILE"
@@ -188,7 +195,7 @@ uninstall_hy2() {
 clear
 echo -e "${GREEN}Hysteria2 管理脚本 V3.0${NC}"
 echo "--------------------------"
-echo "1. 安装 Hysteria2 (含快捷指令)"
+echo "1. 安装 Hysteria2 "
 echo "2. 查看配置信息"
 echo "3. 修改监听端口"
 echo "4. 重启服务"
