@@ -1,4 +1,4 @@
-# 🚀 一键安装 （Ai生成）
+# 🚀 VPS运行以下脚本 （由Ai生成）
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
