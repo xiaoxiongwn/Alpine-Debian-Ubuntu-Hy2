@@ -51,7 +51,7 @@ show_info() {
 
     echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
-    echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
+    echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
     echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
