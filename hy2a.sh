@@ -9,6 +9,7 @@ BIN="/usr/local/bin/hysteria"
 CONF="$WORKDIR/config.yaml"
 PORT_FILE="$WORKDIR/port.txt"
 PASS_FILE="$WORKDIR/password.txt"
+SCRIPT_PATH="/usr/local/bin/hy2" # 快捷指令路径
 ### =====================
 
 GREEN='\e[32m'
@@ -27,6 +28,14 @@ else
     echo -e "${RED}❌ 仅支持 Alpine / Debian / Ubuntu${NC}"
     exit 1
 fi
+
+# 创建快捷指令函数
+create_shortcut() {
+    cp "$0" "$SCRIPT_PATH"
+    chmod +x "$SCRIPT_PATH"
+    echo -e "${GREEN}▶ 已创建快捷指令: ${YELLOW}hy2${NC}"
+    echo -e "${GREEN}▶ 下次只需输入 ${YELLOW}hy2${NC}${GREEN} 即可管理脚本${NC}"
+}
 
 # 重启服务函数
 restart_service() {
@@ -70,17 +79,15 @@ change_port() {
         return
     fi
 
-    # 修改配置文件 (使用 sed 替换 listen 行)
     sed -i "s/listen: :$OLD_PORT/listen: :$NEW_PORT/g" "$CONF"
     echo "$NEW_PORT" > "$PORT_FILE"
     
-    # 防火墙处理
     if command -v ufw >/dev/null 2>&1; then
         ufw allow "$NEW_PORT"/udp
     fi
 
     restart_service
-    echo -e "${GREEN}✅ 端口已修改为 $NEW_PORT 并已重启服务${NC}"
+    echo -e "${GREEN}✅ 端口已修改并重启服务${NC}"
     show_info
 }
 
@@ -153,6 +160,7 @@ EOF
     fi
     
     restart_service
+    create_shortcut # <--- 安装最后一步创建快捷指令
     echo -e "${GREEN}✅ 安装完成！${NC}"
     show_info
 }
@@ -172,14 +180,15 @@ uninstall_hy2() {
     fi
     rm -rf "$WORKDIR"
     rm -f "$BIN"
+    rm -f "$SCRIPT_PATH" # 删除快捷指令
     echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
 # --- 主菜单 ---
 clear
-echo -e "${GREEN}Hysteria2 管理脚本 V2.0${NC}"
+echo -e "${GREEN}Hysteria2 管理脚本 V3.0${NC}"
 echo "--------------------------"
-echo "1. 安装 Hysteria2"
+echo "1. 安装 Hysteria2 (含快捷指令)"
 echo "2. 查看配置信息"
 echo "3. 修改监听端口"
 echo "4. 重启服务"
