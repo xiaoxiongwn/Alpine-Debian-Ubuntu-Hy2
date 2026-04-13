@@ -36,36 +36,42 @@ restart_service() {
 # 获取并显示信息
 show_info() {
     if [ ! -f "$CONF" ]; then
-        echo -e "${RED}❌ TUIC 未安装${NC}"; return
+        echo -e "${RED}❌ TUIC 未安装或配置文件不存在${NC}"; return
     fi
     
-    # 精准提取端口：适配 [::]:端口 或 0.0.0.0:端口
+    # 精准提取配置信息
     PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
-    # 提取 UUID 和 密码
     UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $2}')
     PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $4}')
     
-    # 获取双栈 IP (增加超时控制，防止卡死)
-    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "未检测到")
+    echo -e "${YELLOW}正在检测公网 IP 地址...${NC}"
+    
+    # 获取 IP (5秒超时，失败则留空)
+    IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
-    echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
+    echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
-    # 只有检测到有效的 IPv4 才显示链接
-    if [[ "$IP4" != "未检测到" ]]; then
-        echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
+    # --- IPv4 显示逻辑 ---
+    if [[ -n "$IP4" ]]; then
+        echo -e "🌐 IPv4 地址: ${YELLOW}$IP4${NC}"
+        echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv4):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
     fi
     
-    # 只有检测到有效的 IPv6 才显示链接
-    if [[ -z "$IP6" ]]; then
-        echo -e "\n${YELLOW}ℹ️ 未检测到公网 IPv6 地址${NC}"
-    else
-        echo -e "\n${GREEN}📎 IPv6 链接:${NC}"
+    # --- IPv6 显示逻辑 ---
+    if [[ -n "$IP6" ]]; then
+        echo -e "\n🌐 IPv6 地址: ${YELLOW}$IP6${NC}"
+        echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv6):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
+    fi
+
+    # 兜底：如果两个都没检测到
+    if [[ -z "$IP4" && -z "$IP6" ]]; then
+        echo -e "\n${RED}⚠️ 警告: 无法检测到任何公网 IP 地址，请检查服务器网络。${NC}"
     fi
     echo -e "${GREEN}=======================================${NC}\n"
 }
