@@ -54,7 +54,7 @@ show_info() {
     echo -e "🌐 IPv4 地址: ${YELLOW}$IP4${NC}"
     echo -e "🌐 IPv6 地址: ${YELLOW}$IP6${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
-    echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
+    echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
     # --- IPv4 显示逻辑 ---
