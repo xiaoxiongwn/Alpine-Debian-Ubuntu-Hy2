@@ -55,19 +55,19 @@ show_info() {
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
+    echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
+    echo -e "📌 IPv6 地址: ${YELLOW}$IP6${NC}"
     echo -e "🎲 监听端口: ${YELLOW}$PORT${NC}"
     echo -e "🔐 认证密码: ${YELLOW}$PASSWORD${NC}"
     
     # IPv4 显示逻辑
     if [[ -n "$IP4" ]]; then
-        echo -e "📌 IPv4 地址: ${YELLOW}$IP4${NC}"
         echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}"
         echo -e "${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
     fi
 
     # IPv6 显示逻辑
     if [[ -n "$IP6" ]]; then
-        echo -e "📌 IPv6 地址: ${YELLOW}$IP6${NC}"
         echo -e "\n${GREEN}📎 节点链接 (IPv6):${NC}"
         echo -e "${YELLOW}hy2://$PASSWORD@[$IP6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V6${NC}"
     fi
