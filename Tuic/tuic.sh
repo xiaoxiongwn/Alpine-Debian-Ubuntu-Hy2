@@ -53,6 +53,15 @@ show_info() {
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
     echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
+    
+    echo -e "\n${GREEN}📎 IPv4 链接:${NC}"
+    echo -e "${YELLOW}tuic://$UUID:$PASS@$IPV4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
+    
+    if [[ -n "$IPV6" && "$IPV6" != "未检测到" ]]; then
+        echo -e "\n${GREEN}📎 IPv6 链接:${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IPV6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
+    fi
+    echo -e "${GREEN}=======================================${NC}\n"
 }
 
 # 修改端口
