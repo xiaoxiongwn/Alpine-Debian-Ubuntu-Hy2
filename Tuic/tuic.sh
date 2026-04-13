@@ -51,20 +51,20 @@ show_info() {
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
+    echo -e "🌐 IPv4 地址: ${YELLOW}$IP4${NC}"
+    echo -e "🌐 IPv6 地址: ${YELLOW}$IP6${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
     echo -e "🔐 PASS: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
     # --- IPv4 显示逻辑 ---
     if [[ -n "$IP4" ]]; then
-        echo -e "🌐 IPv4 地址: ${YELLOW}$IP4${NC}"
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv4):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
     fi
     
     # --- IPv6 显示逻辑 ---
     if [[ -n "$IP6" ]]; then
-        echo -e "\n🌐 IPv6 地址: ${YELLOW}$IP6${NC}"
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv6):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
     fi
