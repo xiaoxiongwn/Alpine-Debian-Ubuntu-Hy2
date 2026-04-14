@@ -8,14 +8,12 @@
 
 * x86_64 / ARM64
 
-
 # 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
 
 ```
-
 
 # ✨ 功能
 
@@ -24,7 +22,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 * 自动开机启动
 * 输出 IPv4 / IPv6 节点链接
 * 支持 systemd / openrc 进程监视守护
-
 
 # ⚠️ 注意
 
