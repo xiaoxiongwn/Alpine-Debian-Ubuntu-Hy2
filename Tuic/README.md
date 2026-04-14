@@ -2,36 +2,30 @@
 
 支持系统：
 
-* Alpine
-* Debian / Ubuntu
+* Alpine / Debian / Ubuntu
 
 支持架构：
 
-* x86_64
-* ARM64
+* x86_64 / ARM64
 
----
-
-## 🚀 VPS运行以下脚本
+# 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Tuic/tuic.sh)
+
 ```
 
----
-
-
-## ✨ 功能
+# ✨ 功能
 
 * 安装 TUIC
-* 自动生bing自签证书
-* 自动开机启动
-* 输出 v2rayN 的 IPv4 / IPv6 链接
+* 自动生成bing自签证书
+* 自动设置开机启动
+* 输出 IPv4 / IPv6 节点链接
 * 支持 systemd / openrc 进程监视守护
 
----
+# ⚠️ 注意
 
-## ⚠️ 注意
-
-* 默认端口随机，可自行更改
+* 默认安装端口随机，完成后可自行更改
 * 自签证书需允许不安全
+
+
