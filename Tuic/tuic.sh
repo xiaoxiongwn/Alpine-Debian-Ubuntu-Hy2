@@ -60,13 +60,13 @@ show_info() {
     # --- IPv4 显示逻辑 ---
     if [[ -n "$IP4" ]]; then
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv4):${NC}"
-        echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V4${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&insecure=1&sni=www.bing.com#TUIC_V4${NC}"
     fi
     
     # --- IPv6 显示逻辑 ---
     if [[ -n "$IP6" ]]; then
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv6):${NC}"
-        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&allowInsecure=1&sni=www.bing.com#TUIC_V6${NC}"
+        echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&insecure=1&sni=www.bing.com#TUIC_V6${NC}"
     fi
 
     # 兜底：如果两个都没检测到
