@@ -19,7 +19,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 ✅ 进程守护Debian-Ubuntu (systemd Restart=always)
 
-✅ 输出 IPv4 + IPv6 的 v2rayN 链接
+✅ 输出 IPv4 + IPv6 的节点链接
 
 VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
 
