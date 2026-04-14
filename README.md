@@ -18,14 +18,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 # ✨ 功能
 
 * 安装 Hysteria2
-* 自动生bing自签证书
-* 自动开机启动
+* 自动生成bing自签证书
+* 自动设置开机启动
 * 输出 IPv4 / IPv6 节点链接
 * 支持 systemd / openrc 进程监视守护
 
 # ⚠️ 注意
 
-* 默认端口随机，可自行更改
+* 默认安装端口随机，完成后可自行更改
 * 自签证书需允许不安全
 * VPS低于128M内存使用Hy2，建议在客户端设置合适带宽
 
