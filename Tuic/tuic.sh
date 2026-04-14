@@ -51,8 +51,8 @@ show_info() {
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
     echo -e "\n${GREEN}========== TUIC 配置信息 ==========${NC}"
-    echo -e "🌐 IPv4 地址: ${YELLOW}$IP4${NC}"
-    echo -e "🌐 IPv6 地址: ${YELLOW}$IP6${NC}"
+    echo -e "🌐 IPv4地址: ${YELLOW}$IP4${NC}"
+    echo -e "🌐 IPv6地址: ${YELLOW}$IP6${NC}"
     echo -e "📌 UUID: ${YELLOW}$UUID${NC}"
     echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
