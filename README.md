@@ -1,4 +1,4 @@
-## Hysteria2 一键脚本（由Ai生成）
+# Hysteria2 一键脚本（由Ai生成）
 
 支持系统：
 
@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 VPS运行以下脚本
+# 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
@@ -20,7 +20,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 ```
 
 
-## ✨ 功能
+# ✨ 功能
 
 * 安装 Hysteria2
 * 自动生bing自签证书
@@ -30,12 +30,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 ---
 
-## ⚠️ 注意
+# ⚠️ 注意
 
 * 默认端口随机，可自行更改
 * 自签证书需允许不安全
-
-
-VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
+* VPS低于128M内存使用Hy2，建议在客户端设置合适带宽
 
 
