@@ -1,25 +1,40 @@
-# 🚀 VPS运行以下脚本 （由Ai生成）
+## Hysteria2 一键脚本（由Ai生成）
+
+支持系统：
+
+* Alpine
+* Debian / Ubuntu
+
+支持架构：
+
+* x86_64
+* ARM64
+
+---
+
+## 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/hy2.sh)
 
 ```
 
-支持Alpine、Debian、Ubuntu系统，进程监视守护，开机自启动
 
-使用 bing 自签证书，TLS证书验证设置允许不安全
+## ✨ 功能
 
-首次安装端口随机，NAT小鸡可自行更改
+* 安装 Hysteria2
+* 自动生bing自签证书
+* 自动开机启动
+* 输出的 IPv4 / IPv6 节点链接
+* 支持 systemd / openrc 进程监视守护
 
-✅ Alpine Debian Ubuntu
+---
 
-✅ Hysteria2
+## ⚠️ 注意
 
-✅ 进程守护Alpine (OpenRC + supervise-daemon)
+* 默认端口随机，可自行更改
+* 自签证书需允许不安全
 
-✅ 进程守护Debian-Ubuntu (systemd Restart=always)
-
-✅ 输出 IPv4 + IPv6 的节点链接
 
 VPS低于128M内存使用Hy2，建议在客户端设置带宽55mbps比较合适
 
