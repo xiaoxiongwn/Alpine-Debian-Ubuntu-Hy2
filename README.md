@@ -2,13 +2,11 @@
 
 支持系统：
 
-* Alpine
-* Debian / Ubuntu
+* Alpine / Debian / Ubuntu
 
 支持架构：
 
-* x86_64
-* ARM64
+* x86_64 / ARM64
 
 
 # 🚀 VPS运行以下脚本
