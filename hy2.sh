@@ -52,7 +52,7 @@ show_info() {
     IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
-    echo -e "\n${GREEN}========== Hysteria2 配置信息 (JSON) ==========${NC}"
+    echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
     echo -e "📌 IPv4地址: ${YELLOW}$IP4${NC}"
     echo -e "📌 IPv6地址: ${YELLOW}$IP6${NC}"
     echo -e "🎲 监听端口: ${YELLOW}$PORT${NC}"
