@@ -20,5 +20,4 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 # ⚠️ 注意
 
 * TUIC使用UDP端口
-* 默认安装端口随机，完成后可自行更改
 * 自签证书需允许不安全
