@@ -183,6 +183,7 @@ uninstall_juicity() {
 while true; do
     clear
     echo -e "${YELLOW}--- Juicity 管理脚本 ---${NC}"
+    echo "--------------------------------------"
     echo -e "${GREEN}1. 安装/更新 Juicity${NC}"
     echo -e "${GREEN}2. 查看当前配置及链接${NC}"
     echo -e "${GREEN}3. 修改监听端口${NC}"
