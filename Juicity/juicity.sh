@@ -30,7 +30,7 @@ install_dependencies() {
 
 # 2. 生成证书
 generate_bing_cert() {
-    echo -e "${YELLOW}正在生成伪装证书...${NC}"
+    echo -e "${YELLOW}正在生成自签证书...${NC}"
     mkdir -p $CERT_DIR
     openssl req -x509 -nodes -newkey rsa:2048 \
         -keyout $CERT_DIR/privkey.pem \
