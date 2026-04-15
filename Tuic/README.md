@@ -1,4 +1,4 @@
-# 🚀 TUIC 一键脚本（由Ai生成）
+# 🚀 TUIC 一键脚本（由Ai生成）  
 
 支持系统： Alpine / Debian / Ubuntu
 
