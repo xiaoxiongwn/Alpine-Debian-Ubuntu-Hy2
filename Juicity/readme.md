@@ -1,17 +1,17 @@
-# Juicity 一键脚本（由Ai生成）
+# 🚀 Juicity 一键脚本（由Ai生成）
 
 支持系统：Alpine / Debian / Ubuntu
 
 支持架构：x86_64 / ARM64
 
-客户端： https://github.com/throneproj/Throne
-
-# 🚀 VPS运行以下脚本
-
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Juicity/juicity.sh)
 
 ```
+---
+Juicity是一个基于quic的代理协议和实现，其灵感来自TUIC： https://github.com/juicity/juicity
+
+客户端推荐使用Throne(基于sing-box)，支持导入Juicity节点链接： https://github.com/throneproj/Throne
 
 # ✨ 功能
 
