@@ -70,7 +70,7 @@ install_juicity() {
 
     # 端口及账户生成
     DEFAULT_PORT=$((RANDOM % 50000 + 10000))
-    read -p "请输入监听端口 (默认随机 $DEFAULT_PORT): " PORT
+    read -p "${GREEN}请输入监听端口 (默认随机 $DEFAULT_PORT): ${NC}" PORT
     PORT=${PORT:-$DEFAULT_PORT}
     
     UUID=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 32 | head -n 1 | sed 's/\(.\{8\}\)\(.\{4\}\)\(.\{4\}\)\(.\{4\}\)\(.\{12\}\)/\1-\2-\3-\4-\5/')
