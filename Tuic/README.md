@@ -1,12 +1,8 @@
 # TUIC 一键脚本（由Ai生成）
 
-支持系统：
+支持系统： Alpine / Debian / Ubuntu
 
-* Alpine / Debian / Ubuntu
-
-支持架构：
-
-* x86_64 / ARM64
+支持架构： x86_64 / ARM64
 
 # 🚀 VPS运行以下脚本
 
@@ -25,7 +21,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 # ⚠️ 注意
 
+* TUIC使用UDP端口
 * 默认安装端口随机，完成后可自行更改
 * 自签证书需允许不安全
-
-
