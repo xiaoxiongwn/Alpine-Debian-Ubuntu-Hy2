@@ -6,7 +6,7 @@ SERVER_NAME="www.bing.com"
 TAG="HY2"
 WORKDIR="/etc/hysteria"
 BIN="/usr/local/bin/hysteria"
-CONF="$WORKDIR/config.yaml"
+CONF="$WORKDIR/config.json"
 PORT_FILE="$WORKDIR/port.txt"
 PASS_FILE="$WORKDIR/password.txt"
 ### =====================
@@ -37,81 +37,68 @@ restart_service() {
     fi
 }
 
-# 获取并显示信息 (双栈支持)
+# 获取并显示信息
 show_info() {
     if [ ! -f "$CONF" ]; then
-        echo -e "${RED}❌ Hysteria2 未安装或配置文件不存在${NC}"
+        echo -e "${RED}❌ 配置文件不存在${NC}"
         return
     fi
 
-    # 提取端口和密码
-    PORT=$(grep "listen:" "$CONF" | sed 's/.*://' | tr -d ' ')
-    PASSWORD=$(grep "password:" "$CONF" | awk -F'"' '{print $2}')
+    # 使用 jq 精确解析 JSON
+    PORT=$(jq -r '.listen' "$CONF" | sed 's/://g')
+    PASSWORD=$(jq -r '.auth.password' "$CONF")
 
     echo -e "${YELLOW}正在检测公网 IP 地址...${NC}"
-    
-    # 获取 IP (设置 5 秒超时)
     IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
-    echo -e "\n${GREEN}========== Hysteria2 配置信息 ==========${NC}"
+    echo -e "\n${GREEN}========== Hysteria2 配置信息 (JSON) ==========${NC}"
     echo -e "📌 IPv4地址: ${YELLOW}$IP4${NC}"
     echo -e "📌 IPv6地址: ${YELLOW}$IP6${NC}"
     echo -e "🎲 监听端口: ${YELLOW}$PORT${NC}"
     echo -e "🔐 认证密码: ${YELLOW}$PASSWORD${NC}"
     
-    # IPv4 显示逻辑
-    if [[ -n "$IP4" ]]; then
-        echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}"
-        echo -e "${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
-    fi
-
-    # IPv6 显示逻辑
-    if [[ -n "$IP6" ]]; then
-        echo -e "\n${GREEN}📎 节点链接 (IPv6):${NC}"
-        echo -e "${YELLOW}hy2://$PASSWORD@[$IP6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V6${NC}"
-    fi
-
-    # 如果两个都没有检测到
+    [[ -n "$IP4" ]] && echo -e "\n${GREEN}📎 节点链接 (IPv4):${NC}\n${YELLOW}hy2://$PASSWORD@$IP4:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V4${NC}"
+    [[ -n "$IP6" ]] && echo -e "\n${GREEN}📎 节点链接 (IPv6):${NC}\n${YELLOW}hy2://$PASSWORD@[$IP6]:$PORT/?sni=$SERVER_NAME&alpn=h3&insecure=1#${TAG}_V6${NC}"
+    
     if [[ -z "$IP4" && -z "$IP6" ]]; then
-        echo -e "${RED}❌ 无法检测到公网 IP，请检查服务器网络${NC}"
+        echo -e "${RED}❌ 无法检测到公网 IP${NC}"
     fi
-    echo -e "${GREEN}=======================================${NC}\n"
+    echo -e "${GREEN}===============================================${NC}\n"
 }
 
-# 更改端口 (手动或随机)
+# 更改端口
 change_port() {
     if [ ! -f "$CONF" ]; then
         echo -e "${RED}❌ 请先安装 Hysteria2${NC}"; return
     fi
-    OLD_PORT=$(cat "$PORT_FILE")
+    OLD_PORT=$(jq -r '.listen' "$CONF" | sed 's/://g')
     echo -e "当前端口为: ${YELLOW}$OLD_PORT${NC}"
-    read -p "请输入新端口 (直接回车则随机生成 10000-65535): " NEW_PORT
+    read -p "请输入新端口 (10000-65535): " NEW_PORT
     
-    if [ -z "$NEW_PORT" ]; then
-        NEW_PORT=$(( ( RANDOM % 55535 ) + 10000 ))
-    fi
-
+    [[ -z "$NEW_PORT" ]] && NEW_PORT=$(( ( RANDOM % 55535 ) + 10000 ))
     if [[ ! "$NEW_PORT" =~ ^[0-9]+$ ]] || [ "$NEW_PORT" -lt 1 ] || [ "$NEW_PORT" -gt 65535 ]; then
         echo -e "${RED}❌ 输入无效${NC}"; return
     fi
 
-    sed -i "s/listen: :$OLD_PORT/listen: :$NEW_PORT/g" "$CONF"
+    # 使用 jq 修改并回写
+    jq --arg p ":$NEW_PORT" '.listen = $p' "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
     echo "$NEW_PORT" > "$PORT_FILE"
     
-    # 尝试放行防火墙
     command -v ufw >/dev/null 2>&1 && ufw allow "$NEW_PORT"/udp
-    
     restart_service
     echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
-    echo -e "${GREEN}✅ hysteria2 服务已重启"
     show_info
 }
 
 # 安装
 install_hy2() {
-    echo -e "${YELLOW}▶ 正在安装依赖...${NC}"
-    [ "$OS" = "alpine" ] && apk add --no-cache curl openssl ca-certificates bash || (apt update && apt install -y curl openssl ca-certificates bash)
+    echo -e "${YELLOW}▶ 正在安装依赖 ...${NC}"
+    if [ "$OS" = "alpine" ]; then
+        apk add --no-cache curl openssl ca-certificates bash jq
+    else
+        apt update && apt install -y curl openssl ca-certificates bash jq
+    fi
     
     mkdir -p "$WORKDIR"
     ARCH=$(uname -m)
@@ -121,11 +108,10 @@ install_hy2() {
         *) echo "❌ 不支持的架构"; exit 1 ;;
     esac
 
-    echo -e "${YELLOW}▶ 下载 Hysteria2 主程序...${NC}"
+    echo -e "${YELLOW}▶ 下载 Hysteria2...${NC}"
     curl -L -o "$BIN" "https://github.com/apernet/hysteria/releases/latest/download/$FILE"
     chmod +x "$BIN"
 
-    # 生成随机密码和 10000 以上随机端口
     PASSWORD=$(openssl rand -hex 4)
     PORT=$(( ( RANDOM % 55535 ) + 10000 ))
     echo "$PASSWORD" > "$PASS_FILE"
@@ -134,23 +120,32 @@ install_hy2() {
     echo -e "${YELLOW}▶ 生成自签证书...${NC}"
     openssl req -x509 -nodes -newkey rsa:2048 -keyout "$WORKDIR/key.pem" -out "$WORKDIR/cert.pem" -days 3650 -subj "/CN=$SERVER_NAME"
 
-    # 写入配置
-    cat > "$CONF" <<EOF
-listen: :$PORT
-tls:
-  cert: $WORKDIR/cert.pem
-  key: $WORKDIR/key.pem
-  alpn:
-    - h3
-auth:
-  type: password
-  password: "$PASSWORD"
-masquerade:
-  type: proxy
-  proxy:
-    url: https://www.bing.com
-    rewriteHost: true
-EOF
+    # 使用 jq 构建初始 JSON 配置
+    jq -n \
+        --arg port ":$PORT" \
+        --arg cert "$WORKDIR/cert.pem" \
+        --arg key "$WORKDIR/key.pem" \
+        --arg pass "$PASSWORD" \
+        --arg sni "$SERVER_NAME" \
+        '{
+            "listen": $port,
+            "tls": {
+                "cert": $cert,
+                "key": $key,
+                "alpn": ["h3"]
+            },
+            "auth": {
+                "type": "password",
+                "password": $pass
+            },
+            "masquerade": {
+                "type": "proxy",
+                "proxy": {
+                    "url": ("https://" + $sni),
+                    "rewriteHost": true
+                }
+            }
+        }' > "$CONF"
 
     # 服务部署
     if [ "$OS" = "alpine" ]; then
@@ -168,7 +163,7 @@ EOF
     else
         cat > /etc/systemd/system/hysteria.service <<EOF
 [Unit]
-Description=Hysteria2
+Description=Hysteria2 Service
 After=network.target
 [Service]
 ExecStart=$BIN server -c $CONF
@@ -182,13 +177,13 @@ EOF
     fi
     
     restart_service
-    echo -e "${GREEN}✅ Hysteria2 安装完成！${NC}"
+    echo -e "${GREEN}✅ Hysteria2 安装完成 ${NC}"
     show_info
 }
 
 # 卸载
 uninstall_hy2() {
-    echo -e "${YELLOW}▶ 正在清理系统...${NC}"
+    echo -e "${YELLOW}▶ 正在卸载...${NC}"
     if [ "$OS" = "alpine" ]; then
         rc-service hysteria stop || true
         rc-update del hysteria || true
@@ -204,12 +199,12 @@ uninstall_hy2() {
     echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
-# --- 菜单界面 ---
+# 菜单
 clear
-echo -e "${GREEN}Hysteria2 管理脚本${NC}"
+echo -e "${GREEN}--- Hysteria2 管理脚本 ---${NC}"
 echo "--------------------------"
 echo "1. 安装 Hysteria2"
-echo "2. 查看配置信息"
+echo "2. 查看配置节点链接"
 echo "3. 更改监听端口"
 echo "4. 重启服务"
 echo "5. 卸载 Hysteria2"
