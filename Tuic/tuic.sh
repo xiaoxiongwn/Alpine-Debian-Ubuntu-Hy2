@@ -90,7 +90,7 @@ change_port() {
     
     echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
     # 绿色显示提示
-    echo -ne "${GREEN}请输入新端口 (1-65535，直接回车则随机生成): ${NC}"
+    echo -ne "${GREEN}请输入新端口 (直接回车则随机生成): ${NC}"
     read NEW_PORT
     
     [[ -z "$NEW_PORT" ]] && NEW_PORT=$(( ( RANDOM % 50000 ) + 10000 ))
