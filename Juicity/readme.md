@@ -4,6 +4,8 @@
 
 支持架构：x86_64 / ARM64
 
+客户端： https://github.com/throneproj/Throne
+
 # 🚀 VPS运行以下脚本
 
 ```bash
