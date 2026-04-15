@@ -1,10 +1,8 @@
-# TUIC 一键脚本（由Ai生成）
+# 🚀 TUIC 一键脚本（由Ai生成）
 
 支持系统： Alpine / Debian / Ubuntu
 
 支持架构： x86_64 / ARM64
-
-# 🚀 VPS运行以下脚本
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu-Hy2/main/Tuic/tuic.sh)
