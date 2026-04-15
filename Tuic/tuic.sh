@@ -4,7 +4,7 @@ set -e
 ### ===== 配置参数 =====
 WORK_DIR="/usr/local/tuic"
 BIN="${WORK_DIR}/tuic-server"
-CONF="${WORK_DIR}/config.yaml"
+CONF="${WORK_DIR}/config.json"
 SERVICE_NAME="tuic"
 ### =====================
 
@@ -13,6 +13,7 @@ YELLOW='\033[33m'
 RED='\033[31m'
 NC='\033[0m'
 
+# 权限检查
 [[ "$(id -u)" != "0" ]] && { echo -e "${RED}❌ 请使用 root 运行${NC}"; exit 1; }
 
 # 环境判断
@@ -24,6 +25,16 @@ else
     echo -e "${RED}❌ 不支持的系统${NC}"; exit 1
 fi
 
+# 安装基础依赖
+install_dependencies() {
+    echo -e "${YELLOW}▶ 正在检查并安装必要依赖...${NC}"
+    if [ "$OS" = "alpine" ]; then
+        apk add --no-cache curl openssl bash openrc jq
+    else
+        apt update -y && apt install -y curl openssl jq
+    fi
+}
+
 # 重启服务
 restart_service() {
     if command -v systemctl >/dev/null; then
@@ -33,20 +44,18 @@ restart_service() {
     fi
 }
 
-# 获取并显示信息
+# 获取并显示配置信息
 show_info() {
     if [ ! -f "$CONF" ]; then
         echo -e "${RED}❌ TUIC 未安装或配置文件不存在${NC}"; return
     fi
     
-    # 精准提取配置信息
-    PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
-    UUID=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $2}')
-    PASS=$(grep -A 1 "users:" "$CONF" | tail -n 1 | awk -F'"' '{print $4}')
+    SERVER_ADDR=$(jq -r '.server' "$CONF")
+    PORT=$(echo $SERVER_ADDR | rev | cut -d: -f1 | rev)
+    UUID=$(jq -r '.users | keys[0]' "$CONF")
+    PASS=$(jq -r ".users.\"$UUID\"" "$CONF")
     
     echo -e "${YELLOW}正在检测公网 IP 地址...${NC}"
-    
-    # 获取 IP (5秒超时，失败则留空)
     IP4=$(curl -s4 --connect-timeout 5 ip.sb || curl -s4 --connect-timeout 5 ifconfig.me || echo "")
     IP6=$(curl -s6 --connect-timeout 5 ip.sb || curl -s6 --connect-timeout 5 ifconfig.me || echo "")
 
@@ -57,21 +66,14 @@ show_info() {
     echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
-    # --- IPv4 显示逻辑 ---
     if [[ -n "$IP4" ]]; then
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv4):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@$IP4:$PORT?congestion_control=bbr&alpn=h3&insecure=1&sni=www.bing.com#TUIC_V4${NC}"
     fi
     
-    # --- IPv6 显示逻辑 ---
     if [[ -n "$IP6" ]]; then
         echo -e "\n${GREEN}📎 TUIC 节点链接 (IPv6):${NC}"
         echo -e "${YELLOW}tuic://$UUID:$PASS@[$IP6]:$PORT?congestion_control=bbr&alpn=h3&insecure=1&sni=www.bing.com#TUIC_V6${NC}"
-    fi
-
-    # 兜底：如果两个都没检测到
-    if [[ -z "$IP4" && -z "$IP6" ]]; then
-        echo -e "\n${RED}⚠️ 警告: 无法检测到任何公网 IP 地址，请检查服务器网络。${NC}"
     fi
     echo -e "${GREEN}=======================================${NC}\n"
 }
@@ -82,11 +84,14 @@ change_port() {
         echo -e "${RED}❌ 请先安装 TUIC${NC}"; return
     fi
     
-    # 提取旧端口
-    OLD_PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
+    OLD_ADDR=$(jq -r '.server' "$CONF")
+    OLD_PORT=$(echo $OLD_ADDR | rev | cut -d: -f1 | rev)
+    HOST=$(echo $OLD_ADDR | rev | cut -d: -f2- | rev)
     
     echo -e "当前监听端口为: ${YELLOW}$OLD_PORT${NC}"
-    read -p "请输入新端口 (10000-65535，直接回车则随机): " NEW_PORT
+    # 绿色显示提示
+    echo -ne "${GREEN}请输入新端口 (1-65535，直接回车则随机生成): ${NC}"
+    read NEW_PORT
     
     [[ -z "$NEW_PORT" ]] && NEW_PORT=$(( ( RANDOM % 50000 ) + 10000 ))
 
@@ -94,20 +99,9 @@ change_port() {
         echo -e "${RED}❌ 输入无效${NC}"; return
     fi
 
-    sed -i "s/\(:[0-9]\{1,5\}\)\"/\:$NEW_PORT\"/g" "$CONF"
-    
-    # 校验配置文件是否更改成功
-    CHECK_PORT=$(grep "server:" "$CONF" | sed 's/.*://' | tr -d '"' | tr -d ' ' | tr -d ']')
-    
-    if [ "$CHECK_PORT" != "$NEW_PORT" ]; then
-        echo -e "${RED}❌ 自动修改失败，正在尝试强制写入...${NC}"
-        # 备用方案：通过重新生成 server 行来强制修改
-        BIND_ADDR="0.0.0.0"
-        grep -q "\[::\]" "$CONF" && BIND_ADDR="[::]"
-        sed -i "/server:/c\server: \"${BIND_ADDR}:${NEW_PORT}\"" "$CONF"
-    fi
+    tmp=$(mktemp)
+    jq --arg addr "${HOST}:${NEW_PORT}" '.server = $addr' "$CONF" > "$tmp" && mv "$tmp" "$CONF"
 
-    # 放行防火墙 (Debian 常用 ufw 或 iptables)
     if command -v ufw >/dev/null 2>&1; then
         ufw allow "$NEW_PORT"/udp
     elif command -v iptables >/dev/null 2>&1; then
@@ -115,16 +109,14 @@ change_port() {
     fi
     
     restart_service
-    echo -e "${GREEN}✅ 端口已更改为 $NEW_PORT${NC}"
-    echo -e "${GREEN}✅ TUIC 服务已重启"
+    echo -e "${GREEN}✅ 端口已成功更改为 $NEW_PORT${NC}"
     show_info
 }
 
-# 安装
+# 安装 TUIC
 install_tuic() {
-    echo -e "${YELLOW}▶ 正在安装依赖...${NC}"
-    [ "$OS" = "alpine" ] && apk add --no-cache curl openssl bash openrc || (apt update -y && apt install -y curl openssl)
-
+    install_dependencies
+    
     ARCH=$(uname -m)
     case "$ARCH" in
         x86_64) TUIC_ARCH="x86_64" ;;
@@ -132,35 +124,46 @@ install_tuic() {
         *) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
     esac
 
-mkdir -p $WORK_DIR
-    echo -e "${YELLOW}▶ 从 GitHub 官方下载 TUIC Server...${NC}"
-    
+    mkdir -p $WORK_DIR
+    echo -e "${YELLOW}▶ 正在下载 TUIC Server...${NC}"
     URL="https://github.com/Itsusinn/tuic/releases/latest/download/tuic-server-${TUIC_ARCH}-linux-musl"
-    
     if ! curl -L -o $BIN "$URL"; then
-        echo -e "${RED}❌ 下载失败，请检查服务器是否能连接 GitHub${NC}"; exit 1
+        echo -e "${RED}❌ 下载失败，请检查网络${NC}"; exit 1
     fi
-    
     chmod +x $BIN
 
-    PORT=$(( ( RANDOM % 50000 ) + 10000 ))
+    # --- 绿色端口输入交互 ---
+    echo -e "\n${GREEN}--- 基础配置 ---${NC}"
+    echo -ne "${GREEN}请输入监听端口 (直接回车则随机生成): ${NC}"
+    read INPUT_PORT
+
+    if [[ "$INPUT_PORT" =~ ^[0-9]+$ ]] && [ "$INPUT_PORT" -ge 1 ] && [ "$INPUT_PORT" -le 65535 ]; then
+        PORT=$INPUT_PORT
+    else
+        PORT=$(( ( RANDOM % 50000 ) + 10000 ))
+        echo -e "${YELLOW}使用随机端口: $PORT${NC}"
+    fi
+
     UUID=$(cat /proc/sys/kernel/random/uuid)
     PASS=$(openssl rand -hex 4)
     BIND_ADDR="0.0.0.0"
     ip -6 addr | grep -q "global" && BIND_ADDR="[::]"
 
     cat > $CONF <<EOF
-server: "${BIND_ADDR}:${PORT}"
-users:
-  "${UUID}": "${PASS}"
-congestion_control: "bbr"
-auth_timeout: "3s"
-zero_rtt_handshake: false
-tls:
-  certificate: "${WORK_DIR}/cert.pem"
-  private_key: "${WORK_DIR}/key.pem"
-  alpn:
-    - "h3"
+{
+  "server": "${BIND_ADDR}:${PORT}",
+  "users": {
+    "${UUID}": "${PASS}"
+  },
+  "congestion_control": "bbr",
+  "auth_timeout": "3s",
+  "zero_rtt_handshake": false,
+  "tls": {
+    "certificate": "${WORK_DIR}/cert.pem",
+    "private_key": "${WORK_DIR}/key.pem",
+    "alpn": ["h3"]
+  }
+}
 EOF
 
     openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
@@ -184,7 +187,7 @@ EOF
     else
         cat > /etc/init.d/${SERVICE_NAME} <<EOF
 #!/sbin/openrc-run
-description="TUIC v5 Server"
+description="TUIC Server"
 command="${BIN}"
 command_args="-c ${CONF}"
 pidfile="/run/\${RC_SVCNAME}.pid"
@@ -198,7 +201,7 @@ EOF
     fi
 
     restart_service
-    echo -e "${GREEN}✅ 安装完成${NC}"
+    echo -e "${GREEN}✅ TUIC 安装并配置完成${NC}"
     show_info
 }
 
@@ -218,9 +221,9 @@ uninstall_tuic() {
     echo -e "${GREEN}✅ 卸载成功${NC}"
 }
 
-# --- 菜单 ---
+# --- 菜单逻辑 ---
 clear
-echo -e "${GREEN}TUIC 管理脚本${NC}"
+echo -e "${GREEN}--- TUIC 管理脚本 ---${NC}"
 echo "--------------------------"
 echo "1. 安装 TUIC"
 echo "2. 查看配置信息"
