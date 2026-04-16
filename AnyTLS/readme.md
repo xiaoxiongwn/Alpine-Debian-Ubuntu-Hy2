@@ -9,6 +9,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 ```
 
+客户端推荐使用Throne(基于sing-box)，支持导入 AnyTLS 节点链接： https://github.com/throneproj/Throne
+
 # ✨ 功能
 
 * 安装 AnyTLS
