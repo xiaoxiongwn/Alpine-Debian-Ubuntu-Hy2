@@ -93,8 +93,8 @@ show_info() {
     echo -e "🔐 密码: ${YELLOW}$PASS${NC}"
     echo -e "🎲 端口: ${YELLOW}$PORT${NC}"
     
-    [[ -n "$IP4" ]] && echo -e "\n${GREEN}📎 IPv4 链接:${NC}\n${YELLOW}anytls://$PASS@$IP4:$PORT?allowInsecure=true#AnyTLS_v4${NC}"
-    [[ -n "$IP6" ]] && echo -e "\n${GREEN}📎 IPv6 链接:${NC}\n${YELLOW}anytls://$PASS@[$IP6]:$PORT?allowInsecure=true#AnyTLS_v6${NC}"
+    [[ -n "$IP4" ]] && echo -e "\n${GREEN}📎 IPv4 链接:${NC}\n${YELLOW}anytls://$PASS@$IP4:$PORT?insecure=1#AnyTLS_v4${NC}"
+    [[ -n "$IP6" ]] && echo -e "\n${GREEN}📎 IPv6 链接:${NC}\n${YELLOW}anytls://$PASS@[$IP6]:$PORT?insecure=1#AnyTLS_v6${NC}"
     echo -e "${GREEN}=======================================${NC}\n"
 }
 
