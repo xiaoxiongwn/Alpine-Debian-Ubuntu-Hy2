@@ -19,4 +19,5 @@ bash <(curl -fsSL https://raw.githubusercontent.com/a88wyzz/Alpine-Debian-Ubuntu
 
 # ⚠️ 注意
 
+* AnyTLS 服务端使用TCP端口
 * 自签证书需允许不安全
